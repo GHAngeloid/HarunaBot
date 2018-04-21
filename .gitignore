@@ -1,0 +1,11 @@
+# Directories or Files
+.idea/
+target/
+Reference.java*
+HarunaBotNotes.txt
+
+# File extensions
+*.iml
+*.xml
+*.log
+*.pem
