@@ -20,22 +20,19 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
 public class GuildMemberListener extends ListenerAdapter {
 
     public void onGuildMemberJoin(GuildMemberJoinEvent event){
-        //GuildController guild=new GuildController(j.getGuild());
-        if(event.getGuild().getName().equals("Rutgers Esports")) {
-            //event.getGuild().getTextChannelsByName("introductions", true).get(0).sendMessage("Welcome to Rutgers Esports "
-                    //+ event.getUser().getAsMention() + "! Check #welcome for official rules of this server.").queue();
-            PrivateChannel priv = event.getUser().openPrivateChannel().complete();
-            priv.sendMessage("Welcome to " + event.getGuild().getName() + "! Check #welcome for official rules of this server and add your roles in #botcommands.").queue();
-        }else {
-            //event.getGuild().getTextChannels().get(0).sendMessage("Welcome to GHAngeloid's Discord Server "+event.getUser().getAsMention()
-                    //+"! Make sure you read #rules.").queue();
-            PrivateChannel priv = event.getUser().openPrivateChannel().complete();
-            priv.sendMessage("Welcome to " + event.getGuild().getName() + "! Check #rules for official rules of this server and add your roles in #roles.").queue();
 
+        if(event.getGuild().getName().equals("Rutgers Esports")) {
+            PrivateChannel priv = event.getUser().openPrivateChannel().complete();
+            priv.sendMessage("Welcome to " + event.getGuild().getName() + "! Check #welcome for official rules of this server and add your roles in #botcommands. Thank you!").queue();
+        }else {
+            PrivateChannel priv = event.getUser().openPrivateChannel().complete();
+            priv.sendMessage("Welcome to " + event.getGuild().getName() + "! Check #welcome for official rules of this server and add your roles in #botcommands. Thank you!").queue();
         }
+        // keeping both servers separated in case of future message edits
+
     }
 
-    /*
+    /* DEPRECATED
     public void onGuildMemberLeave(GuildMemberLeaveEvent event){
         if(! event.getGuild().getName().equals("Rutgers Esports")) {
             event.getGuild().getTextChannels().get(0).sendMessage(event.getUser().getName()+" has left").queue();
@@ -43,7 +40,7 @@ public class GuildMemberListener extends ListenerAdapter {
     }
     */
 
-	/*
+	/* DEPRECATED
 	public void onUserOnlineStatusUpdate(UserOnlineStatusUpdateEvent event) {
 		//System.out.println(event.getUser().getName()+" went "+event.getPreviousOnlineStatus().name());
 		Member current=event.getGuild().getMember(event.getUser());
@@ -87,8 +84,7 @@ public class GuildMemberListener extends ListenerAdapter {
         }
     }
 
-    // DEPRECATED
-    /*
+    /* DEPRECATED
     public void onUserGameUpdate(UserGameUpdateEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         Game game = event.getCurrentGame();

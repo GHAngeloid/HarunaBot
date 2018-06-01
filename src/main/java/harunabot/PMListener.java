@@ -20,12 +20,18 @@ public class PMListener extends ListenerAdapter{
 			event.getChannel().sendMessage("You are about to confirm a role in the server. Please input a valid Rutgers email.").queue();
 		}
 		*/
+
         else if(message.contains(Reference.SCHOOLEMAIL1) || message.contains(Reference.SCHOOLEMAIL2)) {
 
             // add Role to server
             Guild guild = event.getJDA().getGuildsByName("Rutgers Esports", true).get(0);
             GuildController gc = new GuildController(guild);
-            gc.addSingleRoleToMember(guild.getMember(event.getAuthor()), guild.getRolesByName("Rutgers Student", true).get(0)).queue();
+
+            if(message.contains("ALUMNI")){
+                gc.addSingleRoleToMember(guild.getMember(event.getAuthor()), guild.getRolesByName("Rutgers Alumni", true).get(0)).queue();
+            }else{
+                gc.addSingleRoleToMember(guild.getMember(event.getAuthor()), guild.getRolesByName("Rutgers Student", true).get(0)).queue();
+            }
             event.getChannel().sendMessage("Access granted!").queue();
 
         }

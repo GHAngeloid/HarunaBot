@@ -1,5 +1,6 @@
 package harunabot;
 
+import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.PrivateChannel;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import java.awt.Color;
@@ -35,6 +36,13 @@ public class Commands extends ListenerAdapter{
         // split Message content apart by whitespace
         String[] command = event.getMessage().getContentRaw().split(" ");
         //String message = event.getMessage().getContent();
+
+        /* DEPRECATED. Reason: Infinite Prints
+        // owo listener
+        if(command[0].equalsIgnoreCase("owo")){
+            event.getChannel().sendMessage(new MessageBuilder().append("owo").build()).queue();
+        }
+        */
 
         // check if command does not start with '!' or the website is not osu!
         if(!command[0].startsWith(Reference.PREFIX) && !command[0].startsWith("https://osu.ppy.sh/")) {
@@ -179,8 +187,8 @@ public class Commands extends ListenerAdapter{
 
         // help
         else if(command[0].equalsIgnoreCase("!help")){
-            String output = "**List of commands:**\n!ping\n!roll\n!emotes\n"
-                    + "!server\n!love\n!addrole\n!deleterole\n!osutopscores\n!game";
+            String output = "**List of commands:**\n!ping\n!roll\n!emotes\n!rolelist\n"
+                    + "!server\n!love\n!addrole\n!deleterole\n!osutopscores\n!game\n!pubg";
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
             eb.setDescription(output);
@@ -226,6 +234,10 @@ public class Commands extends ListenerAdapter{
 		}//returns # of roles
         */
 
+        else if(command[0].equalsIgnoreCase("!test")){
+            System.out.println("Hello");
+        }
+
         // emotes
         else if(command[0].equalsIgnoreCase("!emotes")){
             String output = "**Server Emotes:**\n" + emotePrint(event);
@@ -238,12 +250,41 @@ public class Commands extends ListenerAdapter{
 
         // rolelist
         else if(command[0].equals("!rolelist")){
-            String output = "List of available roles:\n" + event.getGuild().getRoles().get(5).getName() + "\n";
-            for(int i=6;i<event.getGuild().getRoles().size()-1;i++){
-                if(event.getGuild().getRoles().get(i).getName().equals("@everyone")) {
-                    break;
+            String output = "**List of available roles:**\n";
+            // Display roles that are allowed. Make it Permission sensitive!
+            Role role;
+            boolean isAllowed = true;
+            for(int i = 0; i < event.getGuild().getRoles().size(); i++){
+                role = event.getGuild().getRoles().get(i);
+                if(role.getName().equals("@everyone")) {
+                    continue;
                 }
-                output += event.getGuild().getRoles().get(i).getName() + "\n";
+                for(int j = 0; j < role.getPermissions().size(); j++) {
+                    //System.out.println(temp.getPermissions().get(i).getName());
+                    if(role.getPermissions().get(j).getName().equals("Administrator")
+                            || role.getPermissions().get(j).getName().equals("Kick Members")
+                            || role.getPermissions().get(j).getName().equals("Ban Members")
+                            || role.getPermissions().get(j).getName().equals("Move Members")
+                            || role.isManaged()) {
+                        isAllowed = false;
+                        break;
+                    }
+                }
+
+                if(event.getGuild().getName().equals("Rutgers Esports")){
+                    if(role.getName().equals("Former Community Lead")
+                            || role.getName().equals("Community Lead")
+                            || role.getName().equals("Coach/Analyst")
+                            || role.getName().equals("Tech Support")
+                            || role.getName().equals("Tespa East Regional Coordinator")) {
+                        isAllowed = false;
+                    }
+                }
+                if(isAllowed) {
+                    output += role.getName() + "\n";
+                }else{
+                    isAllowed = true;
+                }
             }
             //event.getChannel().sendMessage(output).queue();
             //System.out.println(output);
@@ -324,13 +365,6 @@ public class Commands extends ListenerAdapter{
             //System.out.println("Winner: "+winner);
         }// returns the winner of the giveaway
 
-        // a point system for members
-        else if(command[0].equalsIgnoreCase("!pp")) {
-            //if member is not confirmed, send error
-
-        }
-
-
         // add role or delete role
         // <command> <role>
         else if(command[0].equalsIgnoreCase("!addrole") || command[0].equalsIgnoreCase("!deleterole")) {
@@ -353,10 +387,11 @@ public class Commands extends ListenerAdapter{
             //System.out.println(roleName);
             //int roleIndex = 0;
             Role role = null;
-            for(int i=0;i<event.getGuild().getRoles().size();i++) {
-                if(roleName.equals(event.getGuild().getRoles().get(i).getName())) {
+            for(int i = 0; i < event.getGuild().getRoles().size(); i++) {
+                if(roleName.equalsIgnoreCase(event.getGuild().getRoles().get(i).getName())) {
                     //roleIndex =  i;
                     role = event.getGuild().getRoles().get(i);
+                    roleName = role.getName();
                     break;
                 }
                 if(i + 1 == event.getGuild().getRoles().size()) {
@@ -366,9 +401,10 @@ public class Commands extends ListenerAdapter{
                 // include case if the role does not exist
             }
 
-            // Case Check PRIMARILY FOR RUTGERS ESPORTS SERVER
+            // CASE CHECK PRIMARILY FOR RUTGERS ESPORTS SERVER
             if(event.getGuild().getName().equals("Rutgers Esports")) {
                 if(role.getName().equals("Former Community Lead")
+                        || role.getName().equals("Community Lead")
                         || role.getName().equals("Coach/Analyst")
                         || role.getName().equals("Tech Support")
                         || role.getName().equals("Tespa East Regional Coordinator")) {
@@ -389,12 +425,11 @@ public class Commands extends ListenerAdapter{
                         return;
                     }
                 }
-                if((role.getName().equals("Rutgers Student")
-                        || role.getName().equals("Rutgers Alumni"))
+                if((role.getName().equalsIgnoreCase("Rutgers Student")
+                        || role.getName().equalsIgnoreCase("Rutgers Alumni"))
                         && command[0].equalsIgnoreCase("!addrole")) {
                     PrivateChannel priv = event.getAuthor().openPrivateChannel().complete();
-                    priv.sendMessage("You are about to add a Rutgers role from Rutgers Esports. Reply with your school email.").queue();
-                    //event.getChannel().sendMessage("You are not allowed to add this role. Please DM me your school email.").queue();
+                    priv.sendMessage("You are about to add a Rutgers role from Rutgers Esports. Please reply with STUDENT or ALUMNI and then your school email here (i.e. STUDENT EMAIL):").queue();
                     return;
                 }
             }else{
@@ -408,6 +443,7 @@ public class Commands extends ListenerAdapter{
                 }
             }
 
+            // create GuildController to modify roles
             GuildController guildControl = new GuildController(event.getGuild());
             EmbedBuilder eb = new EmbedBuilder();
 
@@ -677,6 +713,7 @@ public class Commands extends ListenerAdapter{
                 conn.setRequestProperty("Accept", "application/vnd.api+json");
                 in = conn.getInputStream();
             }catch(IOException e){
+                event.getChannel().sendMessage("Invalid Player Name. Must be in NA region.");
                 return;
             }
             //BufferedReader br = null;
@@ -692,9 +729,14 @@ public class Commands extends ListenerAdapter{
 
             //Read JSON response and print
             JSONObject myResponse = new JSONObject(response.toString());
-            String playerId = myResponse.getJSONArray("data").getJSONObject(0).getString("id");
-            JSONArray matchData = myResponse.getJSONArray("data").getJSONObject(0)
-                    .getJSONObject("relationships").getJSONObject("matches").getJSONArray("data");
+            String playerId = myResponse.getJSONArray("data")
+                    .getJSONObject(0)
+                    .getString("id");
+            JSONArray matchData = myResponse.getJSONArray("data")
+                    .getJSONObject(0)
+                    .getJSONObject("relationships")
+                    .getJSONObject("matches")
+                    .getJSONArray("data");
             //System.out.println(matchData.toString());
 
             String[] matchIDArray = new String[matchData.length()];
@@ -712,6 +754,7 @@ public class Commands extends ListenerAdapter{
                 conn.setRequestProperty("Accept", "application/vnd.api+json");
                 in = conn.getInputStream();
             }catch(IOException e){
+                event.getChannel().sendMessage("You do not have any recent matches.").queue();
                 return;
             }
             try{
