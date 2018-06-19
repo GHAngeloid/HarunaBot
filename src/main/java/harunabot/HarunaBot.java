@@ -19,7 +19,7 @@ public class HarunaBot extends ListenerAdapter{
 
         // setting bot characteristics
         builder.setAutoReconnect(true);
-        builder.setGame(Game.of(GameType.DEFAULT, "with Angeloid-sama"));
+        builder.setGame(Game.of(GameType.DEFAULT, "with Taichou"));
         builder.setAudioEnabled(true);
 
         // include Listener classes
@@ -39,4 +39,5 @@ public class HarunaBot extends ListenerAdapter{
         builder.addEventListener(new Commands());
 
     }
+
 }

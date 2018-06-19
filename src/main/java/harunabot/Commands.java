@@ -196,7 +196,7 @@ public class Commands extends ListenerAdapter{
             //need to find a better solution to print all commands through a message
         }
 
-        /*
+        /* DEPRECATED
         // tips
         else if(command[0].equalsIgnoreCase("!tips")){
             event.getChannel().sendMessage(event.getAuthor().getAsMention() + " PLAY MORE!").queue();
@@ -227,8 +227,8 @@ public class Commands extends ListenerAdapter{
         }//returns a random # from 1 to 100
 
 
+        /* DEPRECATED
         // roles
-        /*
 		else if(command[0].equalsIgnoreCase("!rolesize")){
 			event.getChannel().sendMessage("# of Roles: "+event.getGuild().getRoles().size()).queue();
 		}//returns # of roles
@@ -294,7 +294,7 @@ public class Commands extends ListenerAdapter{
             event.getChannel().sendMessage(eb.build()).queue();
         }//returns all roles in server
 
-        /*
+        /* DEPRECATED
         // choose
 		else if(command[0].equalsIgnoreCase("!choose")) {
 			//System.out.println(command[1].length());
@@ -401,8 +401,14 @@ public class Commands extends ListenerAdapter{
                 // include case if the role does not exist
             }
 
+            if(role.getName().equalsIgnoreCase("LIVE")){
+                event.getChannel().sendMessage("You are not allowed to add/delete this role.").queue();
+                return;
+            }
+
             // CASE CHECK PRIMARILY FOR RUTGERS ESPORTS SERVER
             if(event.getGuild().getName().equals("Rutgers Esports")) {
+                // not sure if I should change
                 if(role.getName().equals("Former Community Lead")
                         || role.getName().equals("Community Lead")
                         || role.getName().equals("Coach/Analyst")
@@ -423,13 +429,31 @@ public class Commands extends ListenerAdapter{
                             || role.isManaged()) {
                         event.getChannel().sendMessage("You are not allowed to add/delete this role.").queue();
                         return;
+
                     }
                 }
+                // COMPETITIVE PLAYER CASE
+                // terrible looking testcase, will replace later
+                if((role.getName().equalsIgnoreCase("Scarlet Knights (D1OW)")
+                        || role.getName().equalsIgnoreCase("Scarlet Squires (D2OW)")
+                        || role.getName().equalsIgnoreCase("RU uLoL")
+                        || role.getName().equalsIgnoreCase("RU CSL (LoL)")
+                        || role.getName().equalsIgnoreCase("RUCS-A (CS:GO)")
+                        || role.getName().equalsIgnoreCase("RUCS-B (CS:GO)")
+                        || role.getName().equalsIgnoreCase("Team Bus (Dota)")
+                        || role.getName().equalsIgnoreCase("HoTS Team")
+                        || role.getName().equalsIgnoreCase("Rocket League Team A (Subpar)")
+                        || role.getName().equalsIgnoreCase("Rocket League Team B (Zoomy-Woomy Sauce & Boomy)"))
+                        && command[0].equalsIgnoreCase("!addrole")){
+                    event.getChannel().sendMessage("Contact an Admin/Moderator to add this role.").queue();
+                }
+
+                // RUTGERS PERSON CASE
                 if((role.getName().equalsIgnoreCase("Rutgers Student")
                         || role.getName().equalsIgnoreCase("Rutgers Alumni"))
                         && command[0].equalsIgnoreCase("!addrole")) {
-                    PrivateChannel priv = event.getAuthor().openPrivateChannel().complete();
-                    priv.sendMessage("You are about to add a Rutgers role from Rutgers Esports. Please reply with STUDENT or ALUMNI and then your school email here (i.e. STUDENT EMAIL):").queue();
+                    PrivateChannel privateChannel= event.getAuthor().openPrivateChannel().complete();
+                    privateChannel.sendMessage("You are about to add a Rutgers role from Rutgers Esports. Please reply with STUDENT or ALUMNI and then your school email here (i.e. STUDENT EMAIL):").queue();
                     return;
                 }
             }else{
@@ -483,7 +507,7 @@ public class Commands extends ListenerAdapter{
                 return;
             }else if(command.length > 2) {
                 user = command[1];
-                for(int i=2;i<command.length;i++) {
+                for(int i = 2; i < command.length; i++) {
                     user += "%20" + command[i];
                 }
             }else {
@@ -505,7 +529,7 @@ public class Commands extends ListenerAdapter{
                     + "";
 
             // iterates through each beatmap to get it's metadata
-            for(int i=0;i<json.length();i++) {
+            for(int i = 0; i < json.length(); i++) {
                 String score = "https://osu.ppy.sh/api/get_beatmaps?k=" + apikey + "&b="
                         + json.getJSONObject(i).getInt("beatmap_id") + "&type=string";
                 try {
@@ -665,7 +689,7 @@ public class Commands extends ListenerAdapter{
             //event.getGuild().getMembersByName("YourPrincess", true).get(0).getGame();
         }
 
-        /*
+        /* DEPRECATED
 		else if(command[0].equalsIgnoreCase("!list")) {
 			Node ptr=null;
 			n.printList(ptr);
@@ -713,7 +737,7 @@ public class Commands extends ListenerAdapter{
                 conn.setRequestProperty("Accept", "application/vnd.api+json");
                 in = conn.getInputStream();
             }catch(IOException e){
-                event.getChannel().sendMessage("Invalid Player Name. Must be in NA region.");
+                event.getChannel().sendMessage("Invalid Player Name. Must be in NA region on PC.");
                 return;
             }
             //BufferedReader br = null;
@@ -823,12 +847,12 @@ public class Commands extends ListenerAdapter{
         int emoteTotal = e.getGuild().getEmotes().size();
         String[] idList = new String[emoteTotal];
         String message = "";
-        for(int i=0; i<emoteTotal; i++){
+        for(int i = 0; i < emoteTotal; i++){
             idList[i] = e.getGuild().getEmotes().get(i).getId();
             //e.getGuild().getEmotes().get(i);
         }// list of emoteIDs
 
-        for(int j=0;j<emoteTotal;j++){
+        for(int j = 0; j < emoteTotal; j++){
             if(j == emoteTotal - 1){
                 message += "\t" + e.getGuild().getEmoteById(idList[j]).getAsMention() + "\n";
             }

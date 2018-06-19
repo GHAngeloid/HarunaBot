@@ -1,20 +1,24 @@
 package harunabot;
 
 import java.awt.Color;
-//import java.io.IOException;
+import java.io.IOException;
 
-//import org.json.JSONArray;
-//import org.json.JSONException;
+import net.dv8tion.jda.core.events.user.update.UserUpdateGameEvent;
+import net.dv8tion.jda.core.exceptions.HierarchyException;
+import net.dv8tion.jda.core.managers.GuildController;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import net.dv8tion.jda.core.EmbedBuilder;
-//import net.dv8tion.jda.core.entities.Game;
-//import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.Game;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.PrivateChannel;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 //import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberNickChangeEvent;
 //import net.dv8tion.jda.core.events.user.UserGameUpdateEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.core.entities.Role;
 
 
 public class GuildMemberListener extends ListenerAdapter {
@@ -22,14 +26,21 @@ public class GuildMemberListener extends ListenerAdapter {
     public void onGuildMemberJoin(GuildMemberJoinEvent event){
 
         if(event.getGuild().getName().equals("Rutgers Esports")) {
-            PrivateChannel priv = event.getUser().openPrivateChannel().complete();
-            priv.sendMessage("Welcome to " + event.getGuild().getName() + "! Check #welcome for official rules of this server and add your roles in #botcommands. Thank you!").queue();
+            PrivateChannel privateChannel = event.getUser().openPrivateChannel().complete();
+            privateChannel.sendMessage("Welcome to " + event.getGuild().getName() + "!\n\n" +
+                    "Check `#welcome` for official rules of this server and add your roles in `#botcommands` using the `!addrole` command. " +
+                    "Some roles include `Rutgers Student`, `Rutgers Alumni`, and `Guest`.\n\n" +
+                    "Thank you!").queue();
         }else {
-            PrivateChannel priv = event.getUser().openPrivateChannel().complete();
-            priv.sendMessage("Welcome to " + event.getGuild().getName() + "! Check #welcome for official rules of this server and add your roles in #botcommands. Thank you!").queue();
+            GuildController gc = new GuildController(event.getGuild());
+            Role role = event.getGuild().getRolesByName("Angeloid Army", true).get(0);
+            gc.addSingleRoleToMember(event.getMember(), role).queue();
+            PrivateChannel privateChannel = event.getUser().openPrivateChannel().complete();
+            privateChannel.sendMessage("Welcome to " + event.getGuild().getName() + "!\n\n" +
+                    "Check `#welcome` for official rules of this server and add your roles in `#botcommands` using the `!addrole` command.\n\n" +
+                    "Thank you!").queue();
         }
         // keeping both servers separated in case of future message edits
-
     }
 
     /* DEPRECATED
@@ -84,57 +95,78 @@ public class GuildMemberListener extends ListenerAdapter {
         }
     }
 
-    /* DEPRECATED
-    public void onUserGameUpdate(UserGameUpdateEvent event) {
-        EmbedBuilder eb = new EmbedBuilder();
-        Game game = event.getCurrentGame();
-        Game prevGame = event.getPreviousGame();
-        if(game != null) {
-            if(game.getType().toString().equals("STREAMING")) {
-                try{
-                    String prevGameName = prevGame.getName();
-                    if(prevGame.getType().toString().equals("STREAMING")
-                            || !prevGameName.equals(game.getName())) {
+    // Still needs big fixes!
+    public void onUserUpdateGame(UserUpdateGameEvent event){
+        //EmbedBuilder eb = new EmbedBuilder();
+        Game game = event.getNewGame();
+        Game prevGame = event.getOldGame();
+        Member member = event.getMember();
+
+        // if User begins STREAMING
+        if(game != null && game.getType().toString().equals("STREAMING")) {
+            //eb.setColor(Color.MAGENTA);
+            //event.getCurrentGame().getType()
+            //eb.setAuthor(event.getUser().getName() + " is now live!", null, event.getUser().getAvatarUrl());
+            //eb.setDescription(game.getName() + "\n" + game.getUrl());
+
+            if(event.getGuild().getName().equals("Rutgers Esports")) {
+                // DO STUFF
+                for(int i = 0; i < member.getRoles().size(); i++){
+                    Role role = member.getRoles().get(i);
+                    if(role.getName().equalsIgnoreCase("Rutgers Student")
+                            || role.getName().equalsIgnoreCase("Rutgers Alumni")){
+                        try{
+                            GuildController gc = new GuildController(event.getGuild());
+                            // will have a role called LIVE
+                            Role liveRole = event.getGuild().getRolesByName("LIVE", true).get(0);
+                            gc.addSingleRoleToMember(member, liveRole).queue();
+                            //System.out.println(member.getEffectiveName() + " is LIVE");
+                        }catch(HierarchyException e) {
+
+                        }
                         return;
                     }
-                }catch(NullPointerException e) {
-                    return;
                 }
+                // no LIVE role for you
+                return;
 
-                if(event.getPreviousGame().getType().toString().equals("STREAMING")
-                        && !event.getPreviousGame().getName().equals(game.getName())) {
-                    return;
-                }
-
-
-				String s = "https://api.twitch.tv/helix/streams&client_id=" + Reference.TWITCHAPIKEY;
-				try {
-					JSONArray json = JSONReader.URLtoJSONArray(s);
-					System.out.println("SUCCESS");
-				}catch(IOException | JSONException e) {
-					System.out.println("FAILURE");
-				}
-
-                eb.setColor(Color.MAGENTA);
-                //event.getCurrentGame().getType()
-                eb.setAuthor(event.getUser().getName() + " is now live!", null, event.getUser().getAvatarUrl());
-                eb.setDescription(game.getName() + "\n" + game.getUrl());
-                if(event.getGuild().getName().equals("Rutgers Esports")) {
-                    int roleSize = event.getMember().getRoles().size();
-                    int i;
-                    for(i = 0; i < roleSize; i++) {
-                        if(event.getMember().getRoles().get(i).getName().equals("Rutgers Student")) {
-                            event.getGuild().getTextChannelsByName("livestreams", true).get(0).sendMessage(eb.build()).queue();
-                            break;
-                        }
-                    }
-
-                }else {
-                    event.getGuild().getTextChannelsByName("self_promotion", true).get(0).sendMessage(eb.build()).queue();
-                }
+            }else {
+                //event.getGuild().getTextChannelsByName("self_promotion", true).get(0).sendMessage(eb.build()).queue();
+                GuildController gc = new GuildController(event.getGuild());
+                // will have a role called LIVE
+                Role role = event.getGuild().getRolesByName("LIVE", true).get(0);
+                gc.addSingleRoleToMember(member, role).queue();
+                //System.out.println(member.getEffectiveName() + " is LIVE");
+                return;
             }
         }
+        // check if User stops STREAMING
+        if(prevGame == null){
+            return;
+        }
+        if(prevGame.getType().toString().equals("STREAMING")){
+            if(event.getGuild().getName().equals("Rutgers Esports")) {
+                // DO STUFF
+                try{
+                    GuildController gc = new GuildController(event.getGuild());
+                    // will have a role called LIVE
+                    Role liveRole = event.getGuild().getRolesByName("LIVE", true).get(0);
+                    gc.removeSingleRoleFromMember(member, liveRole).queue();
+                    //System.out.println(member.getEffectiveName() + " is not LIVE");
+                }catch(HierarchyException e) {
+
+                }
+                return;
+            }else{
+                // DO STUFF
+                GuildController gc = new GuildController((event.getGuild()));
+                Role role = event.getGuild().getRolesByName("LIVE", true).get(0);
+                gc.removeSingleRoleFromMember(member, role).queue();
+                //System.out.println(member.getEffectiveName() + " is not LIVE");
+                return;
+            }
+        }
+
     }
-    */
 
 }
