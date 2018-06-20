@@ -276,7 +276,17 @@ public class Commands extends ListenerAdapter{
                             || role.getName().equals("Community Lead")
                             || role.getName().equals("Coach/Analyst")
                             || role.getName().equals("Tech Support")
-                            || role.getName().equals("Tespa East Regional Coordinator")) {
+                            || role.getName().equals("Tespa East Regional Coordinator")
+                            || role.getName().equals("Scarlet Knights (D1OW)")
+                            || role.getName().equals("Scarlet Squires (D2OW)")
+                            || role.getName().equals("RU uLoL")
+                            || role.getName().equals("RU CSL (LoL)")
+                            || role.getName().equals("RUCS-A (CS:GO)")
+                            || role.getName().equals("RUCS-B (CS:GO)")
+                            || role.getName().equals("Team Bus (Dota)")
+                            || role.getName().equals("HoTS Team")
+                            || role.getName().equals("Rocket League Team A (Subpar)")
+                            || role.getName().equals("Rocket League Team B (Zoomy-Woomy Sauce & Boomy)")) {
                         isAllowed = false;
                     }
                 }
@@ -446,6 +456,7 @@ public class Commands extends ListenerAdapter{
                         || role.getName().equalsIgnoreCase("Rocket League Team B (Zoomy-Woomy Sauce & Boomy)"))
                         && command[0].equalsIgnoreCase("!addrole")){
                     event.getChannel().sendMessage("Contact an Admin/Moderator to add this role.").queue();
+                    return;
                 }
 
                 // RUTGERS PERSON CASE
@@ -714,6 +725,7 @@ public class Commands extends ListenerAdapter{
 
         // pic/gif commands
 
+        // pubg
         else if(command[0].equalsIgnoreCase("!pubg")){
             // data from latest match
             String user = "";
