@@ -25,7 +25,7 @@ public class GuildMemberListener extends ListenerAdapter {
 
     public void onGuildMemberJoin(GuildMemberJoinEvent event){
 
-        if(event.getGuild().getName().equals("Rutgers Esports")) {
+        if(event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
             PrivateChannel privateChannel = event.getUser().openPrivateChannel().complete();
             privateChannel.sendMessage("Welcome to " + event.getGuild().getName() + "!\n\n" +
                     "Check `#welcome` for official rules of this server and add your roles in `#botcommands` using the `!addrole` command. " +
@@ -83,7 +83,7 @@ public class GuildMemberListener extends ListenerAdapter {
 	*/
 
     public void onGuildMemberNickChange(GuildMemberNickChangeEvent event) {
-        if(! event.getGuild().getName().equals("Rutgers Esports")) {
+        if(! event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
             if(event.getPrevNick().equals(null)) {
@@ -109,7 +109,7 @@ public class GuildMemberListener extends ListenerAdapter {
             //eb.setAuthor(event.getUser().getName() + " is now live!", null, event.getUser().getAvatarUrl());
             //eb.setDescription(game.getName() + "\n" + game.getUrl());
 
-            if(event.getGuild().getName().equals("Rutgers Esports")) {
+            if(event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
                 // DO STUFF
                 for(int i = 0; i < member.getRoles().size(); i++){
                     Role role = member.getRoles().get(i);
@@ -145,7 +145,7 @@ public class GuildMemberListener extends ListenerAdapter {
             return;
         }
         if(prevGame.getType().toString().equals("STREAMING")){
-            if(event.getGuild().getName().equals("Rutgers Esports")) {
+            if(event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
                 // DO STUFF
                 try{
                     GuildController gc = new GuildController(event.getGuild());

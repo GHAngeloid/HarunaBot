@@ -24,7 +24,7 @@ public class PMListener extends ListenerAdapter{
         else if(message.contains(Reference.SCHOOLEMAIL1) || message.contains(Reference.SCHOOLEMAIL2)) {
 
             // add Role to server
-            Guild guild = event.getJDA().getGuildsByName("Rutgers Esports", true).get(0);
+            Guild guild = event.getJDA().getGuildsByName(Reference.PUBLICSERVER, true).get(0);
             GuildController gc = new GuildController(guild);
 
             if(message.contains("ALUMNI")){

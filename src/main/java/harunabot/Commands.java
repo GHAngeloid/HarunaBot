@@ -55,8 +55,8 @@ public class Commands extends ListenerAdapter{
         //System.out.println(command[0]);
 
         // osu! beatmap listener for info
+        // CHANGE : include new URL for beatmaps for new website
         if(command[0].startsWith("https://osu.ppy.sh/b/") || command[0].startsWith("https://osu.ppy.sh/s/")) {
-            String apikey = Reference.OSUAPIKEY;
             JSONObject data = null;
             String beatmapId = "";
 
@@ -67,16 +67,30 @@ public class Commands extends ListenerAdapter{
             }
 
             //beatmapId = command[0].substring(21);
-            String map = "https://osu.ppy.sh/api/get_beatmaps?k=" + apikey
+            String map = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY
                     + beatmapId + "&type=string";
 
-            try {
-                data = JSONReader.URLtoJSON(map);//calls JSONReader class to convert URL contents to JSONObject
-            }catch(JSONException | IOException | NullPointerException e) {
-                event.getChannel().sendMessage("Invalid beatmap link. Link must be 'https://osu.ppy.sh/b/<beatmapid>'").queue();
+            HttpURLConnection conn = null;
+            InputStream in = null;
+            try{
+                conn = JSONReader.connect(map, Reference.OSUAPIKEY);
+                in = conn.getInputStream();
+            }catch(IOException e){
+                return;
             }
 
-            //System.out.println(data.toString());
+            StringBuffer response = null;
+            try{
+                response = JSONReader.toStringBuffer(in);
+            }catch(IOException e){
+                return;
+            }
+            conn.disconnect();
+
+            //Read JSON response and print
+            JSONArray beatmapMetadataResponse = new JSONArray(response.toString());
+            data = beatmapMetadataResponse.getJSONObject(0);
+
             int mapLength = data.getInt("total_length");
             int minutes = mapLength / 60;
             int seconds = mapLength % 60;
@@ -127,10 +141,9 @@ public class Commands extends ListenerAdapter{
             event.getChannel().sendMessage(eb.build()).queue();
         }
 
+
         // osu! profile stats
         else if(command[0].startsWith("https://osu.ppy.sh/u/") || command[0].startsWith("https://osu.ppy.sh/users/")) {
-            String apikey = Reference.OSUAPIKEY;
-            JSONObject json = null;
             String user = "";
 
             if(command[0].charAt(20) == '/') {
@@ -139,33 +152,41 @@ public class Commands extends ListenerAdapter{
                 user = command[0].substring(25);
             }
 
-            String s = "https://osu.ppy.sh/api/get_user?k=" + apikey + "&u=" + user + "&type=id";
+            String s = "https://osu.ppy.sh/api/get_user?k=" + Reference.OSUAPIKEY + "&u=" + user + "&type=id";
 
-            try {
-                json = JSONReader.URLtoJSON(s);//calls JSONReader class to convert URL contents to JSONObject
-                //System.out.println(json.toString());
-                //System.out.println(json.get("username"));//need valid key to retrieve content (i.e. "username" -> GHAngeloid)
-                //System.out.println("success");
-            }catch(JSONException | IOException e) {
-                //System.out.println("failed");
-                event.getChannel().sendMessage("Invalid username.").queue();
+            HttpURLConnection conn = null;
+            InputStream in = null;
+            try{
+                conn = JSONReader.connect(s, Reference.OSUAPIKEY);
+                in = conn.getInputStream();
+            }catch(IOException e){
                 return;
-                //e.printStackTrace();
             }
-            //System.out.println("TEST");
 
-            String output = "**[" + json.getString("username") + "](https://osu.ppy.sh/users/" + json.getString("user_id") + ")**\n"
-                    + "Level: " + (int)json.getDouble("level") + "\n"
-                    + "Global Rank: " + String.format("%,d", json.getInt("pp_rank"))
-                    + " (" + json.getString("country") + " #" + String.format("%,d", json.getInt("pp_country_rank")) + ")\n"
-                    + "Total PP: " + String.format("%,.2f", json.getDouble("pp_raw")) + "pp\n"
-                    + "Ranked Score: " + String.format("%,d", json.getLong("ranked_score")) + "\n"
-                    + "Hit Accuracy: " + String.format("%.2f", json.getDouble("accuracy")) + "%\n"
-                    + "Playcount: " + String.format("%,d", json.getInt("playcount"));
+            StringBuffer response = null;
+            try{
+                response = JSONReader.toStringBuffer(in);
+            }catch(IOException e){
+                return;
+            }
+            conn.disconnect();
+
+            //Read JSON response and print
+            JSONArray userResponse = new JSONArray(response.toString());
+            JSONObject data = userResponse.getJSONObject(0);
+
+            String output = "**[" + data.getString("username") + "](https://osu.ppy.sh/users/" + data.getString("user_id") + ")**\n"
+                    + "Level: " + (int)data.getDouble("level") + "\n"
+                    + "Global Rank: " + String.format("%,d", data.getInt("pp_rank"))
+                    + " (" + data.getString("country") + " #" + String.format("%,d", data.getInt("pp_country_rank")) + ")\n"
+                    + "Total PP: " + String.format("%,.2f", data.getDouble("pp_raw")) + "pp\n"
+                    + "Ranked Score: " + String.format("%,d", data.getLong("ranked_score")) + "\n"
+                    + "Hit Accuracy: " + String.format("%.2f", data.getDouble("accuracy")) + "%\n"
+                    + "Playcount: " + String.format("%,d", data.getInt("playcount"));
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
             eb.setDescription(output);
-            eb.setThumbnail("https://a.ppy.sh/" + json.getString("user_id"));
+            eb.setThumbnail("https://a.ppy.sh/" + data.getString("user_id"));
             eb.setFooter("osu!", "https://osu.ppy.sh/images/layout/osu-logo@2x.png");
             event.getChannel().sendMessage(eb.build()).queue();
         }
@@ -185,6 +206,7 @@ public class Commands extends ListenerAdapter{
             }
         }
 
+
         // help
         else if(command[0].equalsIgnoreCase("!help")){
             String output = "**List of commands:**\n!ping\n!roll\n!emotes\n!rolelist\n"
@@ -202,6 +224,7 @@ public class Commands extends ListenerAdapter{
             event.getChannel().sendMessage(event.getAuthor().getAsMention() + " PLAY MORE!").queue();
         }//returns "PLAY MORE!"
         */
+
 
         // roll
         else if(command[0].equalsIgnoreCase("!roll")){
@@ -234,9 +257,11 @@ public class Commands extends ListenerAdapter{
 		}//returns # of roles
         */
 
+        /*
         else if(command[0].equalsIgnoreCase("!test")){
             System.out.println("Hello");
         }
+        */
 
         // emotes
         else if(command[0].equalsIgnoreCase("!emotes")){
@@ -271,7 +296,7 @@ public class Commands extends ListenerAdapter{
                     }
                 }
 
-                if(event.getGuild().getName().equals("Rutgers Esports")){
+                if(event.getGuild().getName().equals(Reference.PUBLICSERVER)){
                     if(role.getName().equals("Former Community Lead")
                             || role.getName().equals("Community Lead")
                             || role.getName().equals("Coach/Analyst")
@@ -361,9 +386,9 @@ public class Commands extends ListenerAdapter{
         }// returns the user "loving" a random user in guild
 
         // giveaway
+
         else if(command[0].equalsIgnoreCase("!giveaway")) {
             if(!event.getAuthor().getName().equals(event.getGuild().getOwner().getUser().getName())) {
-                event.getChannel().sendMessage("ERROR: You are not the owner!");
                 return;
             }//tests if author is the owner
             int maxMembers = event.getGuild().getMembers().size();
@@ -374,6 +399,7 @@ public class Commands extends ListenerAdapter{
             event.getChannel().sendMessage("Winner: " + winner);
             //System.out.println("Winner: "+winner);
         }// returns the winner of the giveaway
+
 
         // add role or delete role
         // <command> <role>
@@ -416,8 +442,8 @@ public class Commands extends ListenerAdapter{
                 return;
             }
 
-            // CASE CHECK PRIMARILY FOR RUTGERS ESPORTS SERVER
-            if(event.getGuild().getName().equals("Rutgers Esports")) {
+            // CASE CHECK PRIMARILY FOR PUBLIC SERVER
+            if(event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
                 // not sure if I should change
                 if(role.getName().equals("Former Community Lead")
                         || role.getName().equals("Community Lead")
@@ -471,6 +497,9 @@ public class Commands extends ListenerAdapter{
                 for(int i = 0; i < role.getPermissions().size(); i++) {
                     //System.out.println(temp.getPermissions().get(i).getName());
                     if(role.getPermissions().get(i).getName().equals("Administrator")
+                            || role.getPermissions().get(i).getName().equals("Kick Members")
+                            || role.getPermissions().get(i).getName().equals("Ban Members")
+                            || role.getPermissions().get(i).getName().equals("Move Members")
                             || role.isManaged()) {
                         event.getChannel().sendMessage("You are not allowed to add/delete this role.").queue();
                         return;
@@ -507,6 +536,7 @@ public class Commands extends ListenerAdapter{
 
         }
 
+
         // osutopscores
         else if(command[0].equalsIgnoreCase("!osutopscores")) {
             String apikey = Reference.OSUAPIKEY;
@@ -516,45 +546,92 @@ public class Commands extends ListenerAdapter{
             if(command.length < 2) {
                 event.getChannel().sendMessage("Incorrect command format. !osutopscores <Username>").queue();
                 return;
-            }else if(command.length > 2) {
+            } else if(command.length == 2){
                 user = command[1];
-                for(int i = 2; i < command.length; i++) {
-                    user += "%20" + command[i];
-                }
             }else {
                 user = command[1];
+                for (int i = 2; i < command.length; i++) {
+                    user += " " + command[i];
+                }
             }
 
-            try {
-                String s = "https://osu.ppy.sh/api/get_user_best?k=" + apikey + "&u=" + user + "&limit=5&type=string";
-                json = JSONReader.URLtoJSONArray(s);//calls JSONReader class to convert URL contents to JSONArray
-            }catch(JSONException | IOException e) {
-                //System.out.println("failed");
-                event.getChannel().sendMessage("Invalid username.").queue();
+            InputStream in = null;
+            HttpURLConnection conn = null;
+            try{
+                String site = "https://osu.ppy.sh/api/get_user_best?k=" + apikey + "&u=" + user + "&limit=5&type=string";
+                URL url = new URL(site);
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Authorization", Reference.OSUAPIKEY);
+                conn.setRequestProperty("Accept", "application/vnd.api+json");
+                in = conn.getInputStream();
+            }catch(IOException e){
+                event.getChannel().sendMessage("RIP").queue();
                 return;
-                //e.printStackTrace();
             }
-            //System.out.println(json.toString());
+            //BufferedReader br = null;
+            StringBuffer response = null;
+            try{
+                response = JSONReader.toStringBuffer(in);
+            }catch(IOException e){
+                return;
+            }
+            conn.disconnect();
+            //print in String
+            //System.out.println(response.toString());
+
+            //Read JSON response and print
+            JSONArray userBestResponse = new JSONArray(response.toString());
+            int userId = userBestResponse.getJSONObject(0).getInt("user_id");
+            //System.out.println(userId);
             JSONObject data = null;
             String output = "**" + user + "'s Top Scores**\n"
                     + "";
-
             // iterates through each beatmap to get it's metadata
-            for(int i = 0; i < json.length(); i++) {
+            for(int i = 0; i < userBestResponse.length(); i++) {
                 String score = "https://osu.ppy.sh/api/get_beatmaps?k=" + apikey + "&b="
-                        + json.getJSONObject(i).getInt("beatmap_id") + "&type=string";
+                        + userBestResponse.getJSONObject(i).getInt("beatmap_id") + "&type=string";
+                try{
+                    URL url = new URL(score);
+                    conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setRequestProperty("Authorization", Reference.OSUAPIKEY);
+                    conn.setRequestProperty("Accept", "application/vnd.api+json");
+                    in = conn.getInputStream();
+                }catch(IOException e){
+                    event.getChannel().sendMessage("RIP").queue();
+                    return;
+                }
+                //BufferedReader br = null;
+                response = null;
+                try{
+                    response = JSONReader.toStringBuffer(in);
+                }catch(IOException e){
+                    return;
+                }
+                conn.disconnect();
+                //print in String
+                //System.out.println(response.toString());
+
+                //Read JSON response and print
+                JSONArray beatmapMetadataResponse = new JSONArray(response.toString());
+                data = beatmapMetadataResponse.getJSONObject(0);
+
+                /*
                 try {
                     data = JSONReader.URLtoJSON(score);//calls JSONReader class to convert URL contents to JSONObject
                 }catch(JSONException | IOException e) {
                     event.getChannel().sendMessage("ERROR").queue();
                 }
+                */
+
                 //System.out.println(data.toString());
-                int modCode = json.getJSONObject(i).getInt("enabled_mods");
+                int modCode = userBestResponse.getJSONObject(i).getInt("enabled_mods");
                 String mods = osuModReader(modCode);
                 output += "\n" + data.getString("artist") + " - " + data.getString("title") + " [" + data.getString("version") + "]"
                         + " by " + data.getString("creator") + "\n"
-                        + String.format("%.2f", json.getJSONObject(i).getDouble("pp")) + "pp\n"
-                        + "Mods: " + mods + "\t" + "Rank: " + json.getJSONObject(i).getString("rank") + "\n";
+                        + String.format("%.2f", userBestResponse.getJSONObject(i).getDouble("pp")) + "pp\n"
+                        + "Mods: " + mods + "\t" + "Rank: " + userBestResponse.getJSONObject(i).getString("rank") + "\n";
             }
             //https://osu.ppy.sh/images/badges/score-ranks/Score-SS-Small-60@2x.png
 
@@ -562,13 +639,14 @@ public class Commands extends ListenerAdapter{
             eb.setColor(Color.ORANGE);
             eb.setDescription(output);
             try {
-                eb.setThumbnail("https://a.ppy.sh/" + json.getJSONObject(0).getLong("user_id"));
+                eb.setThumbnail("https://a.ppy.sh/" + userId);
             }catch(JSONException e) {
                 return;
             }
             eb.setFooter("osu!", "https://osu.ppy.sh/images/layout/osu-logo@2x.png");
             event.getChannel().sendMessage(eb.build()).queue();
         }
+
 
         // server
         else if(command[0].equalsIgnoreCase("!server")) {
@@ -594,6 +672,7 @@ public class Commands extends ListenerAdapter{
                     + " | " + dateFormatter.format(now), null);
             event.getChannel().sendMessage(eb.build()).queue();
         }
+
 
         // game
         else if(command[0].equalsIgnoreCase("!game")) {
@@ -725,6 +804,7 @@ public class Commands extends ListenerAdapter{
 
         // pic/gif commands
 
+
         // pubg
         else if(command[0].equalsIgnoreCase("!pubg")){
             // data from latest match
@@ -776,8 +856,12 @@ public class Commands extends ListenerAdapter{
             //System.out.println(matchData.toString());
 
             String[] matchIDArray = new String[matchData.length()];
-
-            JSONObject match = matchData.getJSONObject(0);
+            JSONObject match;
+            try{
+                match = matchData.getJSONObject(0);
+            }catch(JSONException e) {
+                return;
+            }
             //matchIDArray[i] = temp2.getString("id");
             // System.out.println(matchIDArray[i]);
 
@@ -833,8 +917,7 @@ public class Commands extends ListenerAdapter{
             //System.out.println(duration + " " + createdAt + " " + gameMode);
             int timeSurvived = stats.getInt("timeSurvived") / 60;
 
-            eb.setAuthor(event.getAuthor().getName() + "'s Latest PUBG Match", null,
-                    event.getAuthor().getAvatarUrl());
+            eb.setAuthor(user + "'s Latest PUBG Match");
             eb.setDescription("Kills: " + stats.getInt("kills") + "\n"
                     + "Headshot Kills: " + stats.getInt("headshotKills") + "\n"
                     + "Assists: " + stats.getInt("assists") + "\n"
