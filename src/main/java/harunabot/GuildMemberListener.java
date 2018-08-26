@@ -3,6 +3,7 @@ package harunabot;
 import java.awt.Color;
 import java.io.IOException;
 
+import net.dv8tion.jda.core.events.channel.text.update.TextChannelUpdatePermissionsEvent;
 import net.dv8tion.jda.core.events.user.update.UserUpdateGameEvent;
 import net.dv8tion.jda.core.exceptions.HierarchyException;
 import net.dv8tion.jda.core.managers.GuildController;
@@ -14,7 +15,7 @@ import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.PrivateChannel;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
-//import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
+import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberNickChangeEvent;
 //import net.dv8tion.jda.core.events.user.UserGameUpdateEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
@@ -43,13 +44,15 @@ public class GuildMemberListener extends ListenerAdapter {
         // keeping both servers separated in case of future message edits
     }
 
-    /* DEPRECATED
+
     public void onGuildMemberLeave(GuildMemberLeaveEvent event){
-        if(! event.getGuild().getName().equals("Rutgers Esports")) {
-            event.getGuild().getTextChannels().get(0).sendMessage(event.getUser().getName()+" has left").queue();
+        if(event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
+            //event.getGuild().getTextChannels().get(0).sendMessage(event.getUser().getName()+" has left").queue();
+            event.getGuild().getTextChannelsByName("audit", true)
+                    .get(0).sendMessage(event.getUser().getName() + "#" + event.getUser().getDiscriminator() + " has left").queue();
         }
     }
-    */
+
 
 	/* DEPRECATED
 	public void onUserOnlineStatusUpdate(UserOnlineStatusUpdateEvent event) {
@@ -168,5 +171,12 @@ public class GuildMemberListener extends ListenerAdapter {
         }
 
     }
+
+    /*
+    public void onTextChannelUpdatePermissions(TextChannelUpdatePermissionsEvent event){
+        event.getGuild().getTextChannelsByName("audit", true)
+                .get(0).sendMessage("").queue();
+    }
+    */
 
 }

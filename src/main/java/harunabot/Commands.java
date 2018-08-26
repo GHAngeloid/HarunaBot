@@ -257,11 +257,15 @@ public class Commands extends ListenerAdapter{
 		}//returns # of roles
         */
 
+
+        // TEST METHOD
         /*
         else if(command[0].equalsIgnoreCase("!test")){
-            System.out.println("Hello");
+            event.getChannel().sendMessage(event.getAuthor().getDiscriminator()).queue();
+
         }
         */
+
 
         // emotes
         else if(command[0].equalsIgnoreCase("!emotes")){
@@ -281,7 +285,7 @@ public class Commands extends ListenerAdapter{
             boolean isAllowed = true;
             for(int i = 0; i < event.getGuild().getRoles().size(); i++){
                 role = event.getGuild().getRoles().get(i);
-                if(role.getName().equals("@everyone")) {
+                if(role.getName().equals("@everyone") || role.getName().equals("LIVE")) {
                     continue;
                 }
                 for(int j = 0; j < role.getPermissions().size(); j++) {
@@ -778,25 +782,6 @@ public class Commands extends ListenerAdapter{
             }
             //event.getGuild().getMembersByName("YourPrincess", true).get(0).getGame();
         }
-
-        /* DEPRECATED
-		else if(command[0].equalsIgnoreCase("!list")) {
-			Node ptr=null;
-			n.printList(ptr);
-			String data="24";
-			ptr=n.addToRear(ptr,data);
-			n.printList(ptr);
-			data="25";
-			ptr=n.addToRear(ptr,data);
-			n.printList(ptr);
-			data="26";
-			ptr=n.addToRear(ptr,data);
-			n.printList(ptr);
-			data="27";
-			ptr=n.addToRear(ptr,data);
-			n.printList(ptr);
-		}
-		*/
 
         //event.getJDA().shutdownNow();
 
