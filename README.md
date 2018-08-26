@@ -5,7 +5,7 @@ Custom Discord Chat Bot written in Java with [JDA](https://github.com/DV8FromThe
   - HarunaBot.java
     - Initializes JDA and EventListeners.
   - JSONReader.java
-    - Interprets JSON information from given URL.
+    - Interprets JSON information from a given URL.
   - Commands.java
     - Listens for osu!-related URLs such as profiles and beatmaps.
     - Command List:
@@ -23,11 +23,12 @@ Custom Discord Chat Bot written in Java with [JDA](https://github.com/DV8FromThe
   - StatusListener.java
     - Prints status of bot on Console.
   - GuildMemberListener.java
-    - Fired when a User joins the server, changes Status, and changes Game (including Streams). If a User connects their Twitch account, they are able to acquire a LIVE role when they go live and climb up the Role Hierarchy. When they end their stream, the role gets removed.
+    - Fired when a User joins the server, changes Status, and changes Game (including Streams). 
+    - If a User connects their Twitch account, they are able to acquire a LIVE role when they go live and climb up the Role Hierarchy. When they end their stream, the role gets removed.
   - VoiceListener.java
     - All voice channel events such as joining/leaving a voice channel and transferring from one channel to another.
   - PMListener.java
-    - All PMs to the bot.
+    - All private messages to the bot.
   
 ## Third-Party APIs Used:
   - [osu! API](https://github.com/ppy/osu-api/wiki)
