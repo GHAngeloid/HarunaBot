@@ -29,6 +29,8 @@ Custom Discord Chat Bot written in Java with [JDA](https://github.com/DV8FromThe
     - All voice channel events such as joining/leaving a voice channel and transferring from one channel to another.
   - PMListener.java
     - All private messages to the bot.
+  - Audit.java
+    - Users can view what has been changed on the Discord server such as Text Channels, Voice Channels, Categories, Roles, Emotes, etc.
   
 ## Third-Party APIs Used:
   - [osu! API](https://github.com/ppy/osu-api/wiki)
