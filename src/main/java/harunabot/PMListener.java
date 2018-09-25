@@ -23,6 +23,24 @@ public class PMListener extends ListenerAdapter{
 
         else if(message.contains(Reference.SCHOOLEMAIL1) || message.contains(Reference.SCHOOLEMAIL2)) {
 
+            if(!message.contains("STUDENT") && !message.contains("ALUMNI")){
+                return;
+            }
+
+            message.indexOf(' ');
+
+            /*
+            if(message.contains(Reference.SCHOOLEMAIL1)){
+                if(!Character.isAlphabetic(message.charAt(0)) && !Character.isDigit(message.charAt(0))){
+                    return;
+                }
+            }else{
+                if(!Character.isAlphabetic(message.charAt(0))){
+                    return;
+                }
+            }
+            */
+
             // add Role to server
             Guild guild = event.getJDA().getGuildsByName(Reference.PUBLICSERVER, true).get(0);
             GuildController gc = new GuildController(guild);

@@ -25,6 +25,7 @@ public class HarunaBot extends ListenerAdapter{
         // include Listener classes
         addListeners(builder);
 
+
         // set token to JDA and build blocking
         JDA jda = builder.setToken(Reference.TOKEN).buildBlocking();
 
@@ -37,6 +38,7 @@ public class HarunaBot extends ListenerAdapter{
         builder.addEventListener(new VoiceListener());
         builder.addEventListener(new PMListener());
         builder.addEventListener(new Commands());
+        builder.addEventListener(new Audit());
 
     }
 

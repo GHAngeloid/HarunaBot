@@ -2,6 +2,8 @@ package harunabot;
 
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.PrivateChannel;
+import net.dv8tion.jda.core.events.message.priv.GenericPrivateMessageEvent;
+import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import java.awt.Color;
 import java.io.IOException;
@@ -44,8 +46,15 @@ public class Commands extends ListenerAdapter{
         }
         */
 
-        // check if command does not start with '!' or the website is not osu!
+        // Check if command does not start with '!' or the website is not osu!
         if(!command[0].startsWith(Reference.PREFIX) && !command[0].startsWith("https://osu.ppy.sh/")) {
+            return;
+        }
+
+        // Make sure commands stay in appropriate channel(s). Future plan on making this dynamic
+        if(command[0].startsWith(Reference.PREFIX)
+                && !(event.getChannel().getName().equalsIgnoreCase("botcommands")
+                || event.getChannel().getName().equalsIgnoreCase("bottestinglab"))){
             return;
         }
 
@@ -261,7 +270,9 @@ public class Commands extends ListenerAdapter{
         // TEST METHOD
         /*
         else if(command[0].equalsIgnoreCase("!test")){
-            event.getChannel().sendMessage(event.getAuthor().getDiscriminator()).queue();
+            int total = event.getChannel().getHistory().size();
+            event.getChannel().getHistory().;
+            event.getChannel().sendMessage(event.getChannel().getName() + ": " + total).queue();
 
         }
         */
@@ -441,10 +452,16 @@ public class Commands extends ListenerAdapter{
                 // include case if the role does not exist
             }
 
+            // if role is already
+            if(command[0].equalsIgnoreCase("!addrole") && event.getMember().getRoles().contains(role)){
+                return;
+            }
+
             if(role.getName().equalsIgnoreCase("LIVE")){
                 event.getChannel().sendMessage("You are not allowed to add/delete this role.").queue();
                 return;
             }
+
 
             // CASE CHECK PRIMARILY FOR PUBLIC SERVER
             if(event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
@@ -493,11 +510,22 @@ public class Commands extends ListenerAdapter{
                 if((role.getName().equalsIgnoreCase("Rutgers Student")
                         || role.getName().equalsIgnoreCase("Rutgers Alumni"))
                         && command[0].equalsIgnoreCase("!addrole")) {
+
+                    // return if User is trying to add different Unique Role
+                    if(event.getMember().getRoles().contains(event.getGuild().getRolesByName("Rutgers Student", true).get(0))
+                        || event.getMember().getRoles().contains(event.getGuild().getRolesByName("Rutgers Alumni", true).get(0))
+                            || event.getMember().getRoles().contains(event.getGuild().getRolesByName("Guest", true).get(0))){
+                        return;
+                    }
+                    // send a PM to User
                     PrivateChannel privateChannel= event.getAuthor().openPrivateChannel().complete();
-                    privateChannel.sendMessage("You are about to add a Rutgers role from Rutgers Esports. Please reply with STUDENT or ALUMNI and then your school email here (i.e. STUDENT EMAIL):").queue();
-                    return;
+                    privateChannel.sendMessage("You are about to add a Rutgers role from Rutgers Esports. " +
+                            "Please reply with STUDENT or ALUMNI and then your school email here (i.e. STUDENT <EMAIL ADDRESS>):").queue();
+                    // DO SOMETHING HERE
                 }
             }else{
+
+                // Make sure Users do not get roles that are powerful
                 for(int i = 0; i < role.getPermissions().size(); i++) {
                     //System.out.println(temp.getPermissions().get(i).getName());
                     if(role.getPermissions().get(i).getName().equals("Administrator")

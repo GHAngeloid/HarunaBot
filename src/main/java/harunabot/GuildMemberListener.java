@@ -30,7 +30,8 @@ public class GuildMemberListener extends ListenerAdapter {
             PrivateChannel privateChannel = event.getUser().openPrivateChannel().complete();
             privateChannel.sendMessage("Welcome to " + event.getGuild().getName() + "!\n\n" +
                     "Check `#welcome` for official rules of this server and add your roles in `#botcommands` using the `!addrole` command. " +
-                    "Some roles include `Rutgers Student`, `Rutgers Alumni`, and `Guest`.\n\n" +
+                    "Some roles include `Rutgers Student`, `Rutgers Alumni`, and `Guest`. Selecting one of these roles allows you to chat in " +
+                    "all of the channels on the server.\n\n" +
                     "Thank you!").queue();
         }else {
             GuildController gc = new GuildController(event.getGuild());
