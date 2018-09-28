@@ -26,7 +26,7 @@ public class GuildMemberListener extends ListenerAdapter {
 
     public void onGuildMemberJoin(GuildMemberJoinEvent event){
 
-        if(event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
+        if(event.getGuild().getId().equals(Reference.PUBLICGUILDID)) {
             PrivateChannel privateChannel = event.getUser().openPrivateChannel().complete();
             privateChannel.sendMessage("Welcome to " + event.getGuild().getName() + "!\n\n" +
                     "Check `#welcome` for official rules of this server and add your roles in `#botcommands` using the `!addrole` command. " +
@@ -47,7 +47,7 @@ public class GuildMemberListener extends ListenerAdapter {
 
 
     public void onGuildMemberLeave(GuildMemberLeaveEvent event){
-        if(event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
+        if(event.getGuild().getId().equals(Reference.PUBLICGUILDID)) {
             //event.getGuild().getTextChannels().get(0).sendMessage(event.getUser().getName()+" has left").queue();
             event.getGuild().getTextChannelsByName("audit", true)
                     .get(0).sendMessage(event.getUser().getName() + "#" + event.getUser().getDiscriminator() + " has left").queue();
@@ -87,7 +87,7 @@ public class GuildMemberListener extends ListenerAdapter {
 	*/
 
     public void onGuildMemberNickChange(GuildMemberNickChangeEvent event) {
-        if(! event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
+        if(! event.getGuild().getId().equals(Reference.PUBLICGUILDID)) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
             if(event.getPrevNick().equals(null)) {
@@ -113,7 +113,7 @@ public class GuildMemberListener extends ListenerAdapter {
             //eb.setAuthor(event.getUser().getName() + " is now live!", null, event.getUser().getAvatarUrl());
             //eb.setDescription(game.getName() + "\n" + game.getUrl());
 
-            if(event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
+            if(event.getGuild().getId().equals(Reference.PUBLICGUILDID)) {
                 // DO STUFF
                 for(int i = 0; i < member.getRoles().size(); i++){
                     Role role = member.getRoles().get(i);
@@ -149,7 +149,7 @@ public class GuildMemberListener extends ListenerAdapter {
             return;
         }
         if(prevGame.getType().toString().equals("STREAMING")){
-            if(event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
+            if(event.getGuild().getId().equals(Reference.PUBLICGUILDID)) {
                 // DO STUFF
                 try{
                     GuildController gc = new GuildController(event.getGuild());

@@ -14,6 +14,7 @@ public class PMListener extends ListenerAdapter{
 
         if(message.equalsIgnoreCase("ping")) {
             event.getChannel().sendMessage("pong").queue();
+            return;
         }
 		/*
 		else if(message.equalsIgnoreCase("!confirm")) {
@@ -42,7 +43,7 @@ public class PMListener extends ListenerAdapter{
             */
 
             // add Role to server
-            Guild guild = event.getJDA().getGuildsByName(Reference.PUBLICSERVER, true).get(0);
+            Guild guild = event.getJDA().getGuildById(Reference.PUBLICGUILDID);
             GuildController gc = new GuildController(guild);
 
             if(message.contains("ALUMNI")){
@@ -51,8 +52,44 @@ public class PMListener extends ListenerAdapter{
                 gc.addSingleRoleToMember(guild.getMember(event.getAuthor()), guild.getRolesByName("Rutgers Student", true).get(0)).queue();
             }
             event.getChannel().sendMessage("Access granted!").queue();
+            return;
 
         }
+
+        else if(message.contains("!initroles")){
+            if(!event.getJDA().getGuildById(Reference.PRIVATEGUILDID).getOwner().getUser().equals(event.getAuthor())){
+                return;
+            }
+            int index = message.indexOf(' ');
+            if(index == -1){
+                return;
+            }
+            if(Reference.COMPROLES.size() == 10){
+                event.getChannel().sendMessage("Fail").queue();
+                return;
+            }
+            String roleName = message.substring(index + 1);
+            Reference.COMPROLES.add(roleName);
+            event.getChannel().sendMessage("Success").queue();
+            return;
+        }
+
+        else if(message.contains("!print")){
+            if(!event.getJDA().getGuildById(Reference.PRIVATEGUILDID).getOwner().getUser().equals(event.getAuthor())){
+                return;
+            }
+            if(Reference.COMPROLES.isEmpty()){
+                event.getChannel().sendMessage("List is empty!").queue();
+                return;
+            }
+            event.getChannel().sendMessage(Reference.COMPROLES.toString()).queue();
+        }
+
+        /*
+        else if(message.contains("echo") && event.getAuthor().isBot() == false){
+            event.getChannel().sendMessage(message).queue();
+        }
+        */
 
         // include call to server to add Role to User
     }

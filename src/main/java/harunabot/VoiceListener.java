@@ -11,7 +11,7 @@ import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent;
 public class VoiceListener extends ListenerAdapter {
 
     public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
-        if(! event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
+        if(! event.getGuild().getId().equals(Reference.PUBLICGUILDID)) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
             eb.setDescription(event.getMember().getUser().getName() + " has **joined** " + event.getChannelJoined().getName());
@@ -20,7 +20,7 @@ public class VoiceListener extends ListenerAdapter {
     }
 
     public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
-        if(! event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
+        if(! event.getGuild().getId().equals(Reference.PUBLICGUILDID)) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
             eb.setDescription(event.getMember().getUser().getName() + " has **left** " + event.getChannelLeft().getName());
@@ -29,7 +29,7 @@ public class VoiceListener extends ListenerAdapter {
     }
 
     public void onGuildVoiceMove(GuildVoiceMoveEvent event) {
-        if(! event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
+        if(! event.getGuild().getId().equals(Reference.PUBLICGUILDID)) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
             eb.setDescription(event.getMember().getUser().getName() + " has **moved** from "

@@ -7,12 +7,14 @@ import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import java.awt.Color;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Random;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 //import net.dv8tion.jda.core.requests.RestAction;
+import net.dv8tion.jda.core.managers.GuildManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -311,22 +313,23 @@ public class Commands extends ListenerAdapter{
                     }
                 }
 
-                if(event.getGuild().getName().equals(Reference.PUBLICSERVER)){
+                if(event.getGuild().getId().equals(Reference.PUBLICGUILDID)){
                     if(role.getName().equals("Former Community Lead")
-                            || role.getName().equals("Community Lead")
-                            || role.getName().equals("Coach/Analyst")
-                            || role.getName().equals("Tech Support")
-                            || role.getName().equals("Tespa East Regional Coordinator")
-                            || role.getName().equals("Scarlet Knights (D1OW)")
-                            || role.getName().equals("Scarlet Squires (D2OW)")
-                            || role.getName().equals("RU uLoL")
-                            || role.getName().equals("RU CSL (LoL)")
-                            || role.getName().equals("RUCS-A (CS:GO)")
-                            || role.getName().equals("RUCS-B (CS:GO)")
-                            || role.getName().equals("Team Bus (Dota)")
-                            || role.getName().equals("HoTS Team")
-                            || role.getName().equals("Rocket League Team A (Subpar)")
-                            || role.getName().equals("Rocket League Team B (Zoomy-Woomy Sauce & Boomy)")) {
+                            || role.getName().equalsIgnoreCase("Community Lead")
+                            || role.getName().equalsIgnoreCase("Coach/Analyst")
+                            || role.getName().equalsIgnoreCase("Scarlet Knights (D1OW)")
+                            || role.getName().equalsIgnoreCase("Scarlet Squires (D2OW)")
+                            || role.getName().equalsIgnoreCase("RU uLoL")
+                            || role.getName().equalsIgnoreCase("RU CSL (LoL)")
+                            || role.getName().equalsIgnoreCase("RUCS-A (CS:GO)")
+                            || role.getName().equalsIgnoreCase("Team Bus (Dota)")
+                            || role.getName().equalsIgnoreCase("HoTS Team")
+                            || role.getName().equalsIgnoreCase("Rocket League Team A (Subpar)")
+                            || role.getName().equalsIgnoreCase("Rocket League Team B (Zoomy-Woomy Sauce & Boomy)")
+                            || role.getName().equalsIgnoreCase("RUCS-B1 (CS:GO)")
+                            || role.getName().equalsIgnoreCase("RUCS-B2 (CS:GO)")
+                            || role.getName().equalsIgnoreCase("JV1 (DotA)")
+                            || role.getName().equalsIgnoreCase("JV2 (DotA)")) {
                         isAllowed = false;
                     }
                 }
@@ -464,13 +467,11 @@ public class Commands extends ListenerAdapter{
 
 
             // CASE CHECK PRIMARILY FOR PUBLIC SERVER
-            if(event.getGuild().getName().equals(Reference.PUBLICSERVER)) {
+            if(event.getGuild().getId().equals(Reference.PUBLICGUILDID)) {
                 // not sure if I should change
                 if(role.getName().equals("Former Community Lead")
                         || role.getName().equals("Community Lead")
-                        || role.getName().equals("Coach/Analyst")
-                        || role.getName().equals("Tech Support")
-                        || role.getName().equals("Tespa East Regional Coordinator")) {
+                        || role.getName().equals("Coach/Analyst")) {
                     event.getChannel().sendMessage("You are not allowed to add/delete this role.").queue();
                     return;
                 }
@@ -496,11 +497,14 @@ public class Commands extends ListenerAdapter{
                         || role.getName().equalsIgnoreCase("RU uLoL")
                         || role.getName().equalsIgnoreCase("RU CSL (LoL)")
                         || role.getName().equalsIgnoreCase("RUCS-A (CS:GO)")
-                        || role.getName().equalsIgnoreCase("RUCS-B (CS:GO)")
-                        || role.getName().equalsIgnoreCase("Team Bus (Dota)")
+                        || role.getName().equalsIgnoreCase("Team Bus (DotA)")
                         || role.getName().equalsIgnoreCase("HoTS Team")
                         || role.getName().equalsIgnoreCase("Rocket League Team A (Subpar)")
-                        || role.getName().equalsIgnoreCase("Rocket League Team B (Zoomy-Woomy Sauce & Boomy)"))
+                        || role.getName().equalsIgnoreCase("Rocket League Team B (Zoomy-Woomy Sauce & Boomy)")
+                        || role.getName().equalsIgnoreCase("RUCS-B1 (CS:GO)")
+                        || role.getName().equalsIgnoreCase("RUCS-B2 (CS:GO)")
+                        || role.getName().equalsIgnoreCase("JV1 (DotA)")
+                        || role.getName().equalsIgnoreCase("JV2 (DotA)"))
                         && command[0].equalsIgnoreCase("!addrole")){
                     event.getChannel().sendMessage("Contact an Admin/Moderator to add this role.").queue();
                     return;
@@ -808,7 +812,6 @@ public class Commands extends ListenerAdapter{
                 eb.setColor(Color.ORANGE);
                 event.getChannel().sendMessage(eb.build()).queue();
             }
-            //event.getGuild().getMembersByName("YourPrincess", true).get(0).getGame();
         }
 
         //event.getJDA().shutdownNow();
@@ -943,6 +946,17 @@ public class Commands extends ListenerAdapter{
             event.getChannel().sendMessage(eb.build()).queue();
 
         }
+
+        // Add !newtopic command to change topic of text channel (limit this to Mods)
+        /*
+        else if(command[0].equalsIgnoreCase("!newtopic")){
+            Role admin = event.getGuild().getRolesByName("Admin", true).get(0);
+            if(event.getMember().getRoles().contains(admin)){
+                event.getChannel().sendMessage("Today's topic on **" + event.getChannel().getName()
+                        + "** -> " );
+            }
+        }
+        */
 
     }// end of commands
 
