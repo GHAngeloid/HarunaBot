@@ -62,7 +62,7 @@ public class Audit extends ListenerAdapter {
     public void onTextChannelUpdateName(TextChannelUpdateNameEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
-        eb.setDescription("The text channel **" + event.getOldName() + "**" + " has been renamed to **"
+        eb.setDescription("The text channel **" + event.getOldName() + "** has been renamed to **"
                 + event.getNewName() + "**");
         SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' hh:mm a z");
         String msg = dateFormatter.format(new Date());
@@ -74,7 +74,7 @@ public class Audit extends ListenerAdapter {
     public void onTextChannelUpdateTopic(TextChannelUpdateTopicEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
-        eb.setDescription("The text channel **" + event.getChannel().getName() + "**" + " changed its topic from **"
+        eb.setDescription("The text channel **" + event.getChannel().getName() + "** changed its topic from **"
                 + event.getOldTopic() + "** to **" + event.getNewTopic() + "**");
         SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' hh:mm a z");
         String msg = dateFormatter.format(new Date());
@@ -86,7 +86,7 @@ public class Audit extends ListenerAdapter {
     public void onTextChannelUpdatePosition(TextChannelUpdatePositionEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
-        eb.setDescription("The text channel **" + event.getChannel().getName() + "**" + " moved from position **"
+        eb.setDescription("The text channel **" + event.getChannel().getName() + "** moved from position **"
                 + event.getOldPosition() + "** to position **" + event.getNewPosition() + "** in the server.");
         SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' hh:mm a z");
         String msg = dateFormatter.format(new Date());
@@ -126,7 +126,7 @@ public class Audit extends ListenerAdapter {
     public void onVoiceChannelUpdateName(VoiceChannelUpdateNameEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
-        eb.setDescription("The voice channel **" + event.getOldName() + "**" + " has been renamed to **"
+        eb.setDescription("The voice channel **" + event.getOldName() + "** has been renamed to **"
                 + event.getNewName() + "**");
         SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' hh:mm a z");
         String msg = dateFormatter.format(new Date());
@@ -138,7 +138,7 @@ public class Audit extends ListenerAdapter {
     public void onVoiceChannelUpdatePosition(VoiceChannelUpdatePositionEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
-        eb.setDescription("The voice channel **" + event.getChannel().getName() + "**" + " moved from position **"
+        eb.setDescription("The voice channel **" + event.getChannel().getName() + "** moved from position **"
                 + event.getOldPosition() + "** to position **" + event.getNewPosition() + "** in the server.");
         SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' hh:mm a z");
         String msg = dateFormatter.format(new Date());
@@ -177,7 +177,7 @@ public class Audit extends ListenerAdapter {
     public void onCategoryUpdateName(CategoryUpdateNameEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
-        eb.setDescription("The category **" + event.getOldName() + "**" + " has been renamed to **"
+        eb.setDescription("The category **" + event.getOldName() + "** has been renamed to **"
                 + event.getNewName() + "**");
         SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' hh:mm a z");
         String msg = dateFormatter.format(new Date());
@@ -189,7 +189,7 @@ public class Audit extends ListenerAdapter {
     public void onCategoryUpdatePosition(CategoryUpdatePositionEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
-        eb.setDescription("The category **" + event.getCategory().getName() + "**" + " moved from position **"
+        eb.setDescription("The category **" + event.getCategory().getName() + "** moved from position **"
                 + event.getOldPosition() + "** to position **" + event.getNewPosition() + "** in the server.");
         SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' hh:mm a z");
         String msg = dateFormatter.format(new Date());
@@ -228,7 +228,7 @@ public class Audit extends ListenerAdapter {
     public void onRoleUpdateName(RoleUpdateNameEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
-        eb.setDescription("The role **" + event.getOldName() + "**" + " has been renamed to **"
+        eb.setDescription("The role **" + event.getOldName() + "** has been renamed to **"
                 + event.getNewName() + "**");
         SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' hh:mm a z");
         String msg = dateFormatter.format(new Date());
@@ -251,7 +251,7 @@ public class Audit extends ListenerAdapter {
     public void onRoleUpdatePosition(RoleUpdatePositionEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
-        eb.setDescription("The role **" + event.getRole().getName() + "**" + " moved from position **"
+        eb.setDescription("The role **" + event.getRole().getName() + "** moved from position **"
                 + event.getOldPosition() + "** to position **" + event.getNewPosition() + "** in the server.");
         SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' hh:mm a z");
         String msg = dateFormatter.format(new Date());

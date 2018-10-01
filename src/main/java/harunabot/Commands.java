@@ -525,6 +525,7 @@ public class Commands extends ListenerAdapter{
                     PrivateChannel privateChannel= event.getAuthor().openPrivateChannel().complete();
                     privateChannel.sendMessage("You are about to add a Rutgers role from Rutgers Esports. " +
                             "Please reply with STUDENT or ALUMNI and then your school email here (i.e. STUDENT <EMAIL ADDRESS>):").queue();
+                    return;
                     // DO SOMETHING HERE
                 }
             }else{
