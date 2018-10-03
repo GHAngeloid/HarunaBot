@@ -72,6 +72,9 @@ public class Audit extends ListenerAdapter {
     }
 
     public void onTextChannelUpdateTopic(TextChannelUpdateTopicEvent event) {
+        if(event.getNewTopic().equals(null)){
+            return;
+        }
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
         eb.setDescription("The text channel **" + event.getChannel().getName() + "** changed its topic from **"
@@ -83,6 +86,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
+    /*
     public void onTextChannelUpdatePosition(TextChannelUpdatePositionEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
@@ -94,6 +98,7 @@ public class Audit extends ListenerAdapter {
         event.getGuild().getTextChannelsByName("audit", true).get(0)
                 .sendMessage(eb.build()).queue();
     }
+    */
 
     public void onTextChannelUpdatePermissions(TextChannelUpdatePermissionsEvent event) {
         // This one is tricky
@@ -135,6 +140,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
+    /*
     public void onVoiceChannelUpdatePosition(VoiceChannelUpdatePositionEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
@@ -146,6 +152,7 @@ public class Audit extends ListenerAdapter {
         event.getGuild().getTextChannelsByName("audit", true).get(0)
                 .sendMessage(eb.build()).queue();
     }
+    */
 
     public void onVoiceChannelUpdatePermissions(VoiceChannelUpdatePermissionsEvent event) {}
     public void onVoiceChannelUpdateUserLimit(VoiceChannelUpdateUserLimitEvent event) {}
@@ -186,6 +193,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
+    /*
     public void onCategoryUpdatePosition(CategoryUpdatePositionEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
@@ -197,6 +205,7 @@ public class Audit extends ListenerAdapter {
         event.getGuild().getTextChannelsByName("audit", true).get(0)
                 .sendMessage(eb.build()).queue();
     }
+    */
 
     public void onCategoryUpdatePermissions(CategoryUpdatePermissionsEvent event) {
         // HARD
@@ -248,6 +257,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
+    /*
     public void onRoleUpdatePosition(RoleUpdatePositionEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
@@ -259,6 +269,7 @@ public class Audit extends ListenerAdapter {
         event.getGuild().getTextChannelsByName("audit", true).get(0)
                 .sendMessage(eb.build()).queue();
     }
+    */
 
     public void onRoleUpdateHoisted(RoleUpdateHoistedEvent event) {}
     public void onRoleUpdateMentionable(RoleUpdateMentionableEvent event) {}
