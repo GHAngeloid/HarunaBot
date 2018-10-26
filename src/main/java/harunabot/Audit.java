@@ -22,10 +22,12 @@ import net.dv8tion.jda.core.events.emote.EmoteAddedEvent;
 import net.dv8tion.jda.core.events.emote.EmoteRemovedEvent;
 import net.dv8tion.jda.core.events.emote.update.EmoteUpdateNameEvent;
 import net.dv8tion.jda.core.events.emote.update.EmoteUpdateRolesEvent;
+import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.core.events.role.RoleCreateEvent;
 import net.dv8tion.jda.core.events.role.RoleDeleteEvent;
 import net.dv8tion.jda.core.events.role.update.*;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.core.managers.GuildController;
 import net.dv8tion.jda.core.requests.Response;
 
 import java.awt.*;
@@ -312,6 +314,17 @@ public class Audit extends ListenerAdapter {
     }
 
     public void onEmoteUpdateRoles(EmoteUpdateRolesEvent event) {}
+
+    /*
+    public void onGuildMessageReactionAdd(GuildMessageReactionAddEvent event) {
+        if(event.getMessageIdLong() == //Message ID){
+            if(event.getReaction().getReactionEmote().getName().equals("regional_indicator_y")){
+                GuildController gc = new GuildController(event.getGuild());
+                gc.addSingleRoleToMember(event.getMember(), event.getGuild().getRolesByName("Loli", true).get(0)).queue();
+            }
+        }
+    }
+    */
 
 
 }
