@@ -3,9 +3,11 @@
 target/
 Reference.java*
 HarunaBotNotes.txt
+id_rsa*
 
 # File extensions
 *.iml
 *.xml
 *.log
 *.pem
+*.pub
