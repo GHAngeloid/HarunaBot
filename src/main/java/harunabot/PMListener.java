@@ -1,9 +1,10 @@
 package harunabot;
 
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
-import net.dv8tion.jda.core.managers.GuildController;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.entities.Role;
+import java.util.List;
 
 public class PMListener extends ListenerAdapter{
 
@@ -21,40 +22,6 @@ public class PMListener extends ListenerAdapter{
 			event.getChannel().sendMessage("You are about to confirm a role in the server. Please input a valid Rutgers email.").queue();
 		}
 		*/
-
-        else if(message.contains(Reference.SCHOOLEMAIL1) || message.contains(Reference.SCHOOLEMAIL2)) {
-
-            if(!message.contains("STUDENT") && !message.contains("ALUMNI")){
-                return;
-            }
-
-            message.indexOf(' ');
-
-            /*
-            if(message.contains(Reference.SCHOOLEMAIL1)){
-                if(!Character.isAlphabetic(message.charAt(0)) && !Character.isDigit(message.charAt(0))){
-                    return;
-                }
-            }else{
-                if(!Character.isAlphabetic(message.charAt(0))){
-                    return;
-                }
-            }
-            */
-
-            // add Role to server
-            Guild guild = event.getJDA().getGuildById(Reference.PUBLICGUILDID);
-            GuildController gc = new GuildController(guild);
-
-            if(message.contains("ALUMNI")){
-                gc.addSingleRoleToMember(guild.getMember(event.getAuthor()), guild.getRolesByName("Rutgers Alumni", true).get(0)).queue();
-            }else{
-                gc.addSingleRoleToMember(guild.getMember(event.getAuthor()), guild.getRolesByName("Rutgers Student", true).get(0)).queue();
-            }
-            event.getChannel().sendMessage("Access granted!").queue();
-            return;
-
-        }
 
         else if(message.contains("!initroles")){
             if(!event.getJDA().getGuildById(Reference.PRIVATEGUILDID).getOwner().getUser().equals(event.getAuthor())){
@@ -83,6 +50,22 @@ public class PMListener extends ListenerAdapter{
                 return;
             }
             event.getChannel().sendMessage(Reference.COMPROLES.toString()).queue();
+        }
+
+        else if(message.equals("!color")){
+            List<Role> roles = event.getJDA().getGuildById(Reference.PUBLICGUILDID).getRoles();
+            String output = "";
+            for(int i = 0; i < roles.size(); i++){
+                if(roles.get(i).getName().equals("@everyone")){
+                    continue;
+                }
+                else if(roles.get(i).getColor() == null){
+                    continue;
+                }
+                output = output + roles.get(i).getName() + " " + roles.get(i).getColor().getRed()
+                        + " " + roles.get(i).getColor().getGreen() + " " + roles.get(i).getColor().getBlue() + "\n";
+            }
+            event.getChannel().sendMessage(output).queue();
         }
 
         /*

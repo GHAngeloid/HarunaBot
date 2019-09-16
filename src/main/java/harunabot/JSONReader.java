@@ -14,6 +14,12 @@ import org.json.JSONObject;
 
 public class JSONReader {
 
+    /** toStringBuffer
+     *
+     * @param in InputStream
+     * @return StringBuffer
+     * @throws IOException
+     */
     public static StringBuffer toStringBuffer(InputStream in) throws IOException{
 
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -27,6 +33,13 @@ public class JSONReader {
 
     }
 
+    /** connect
+     *
+     * @param link URL
+     * @param key API key
+     * @return HttpURLConnection
+     * @throws IOException
+     */
     public static HttpURLConnection connect(String link, String key) throws IOException{
 
         URL url = new URL(link);

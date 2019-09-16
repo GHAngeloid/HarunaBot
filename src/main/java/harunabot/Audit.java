@@ -1,34 +1,33 @@
 package harunabot;
 
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.events.channel.category.CategoryCreateEvent;
-import net.dv8tion.jda.core.events.channel.category.CategoryDeleteEvent;
-import net.dv8tion.jda.core.events.channel.category.update.CategoryUpdateNameEvent;
-import net.dv8tion.jda.core.events.channel.category.update.CategoryUpdatePermissionsEvent;
-import net.dv8tion.jda.core.events.channel.category.update.CategoryUpdatePositionEvent;
-import net.dv8tion.jda.core.events.channel.text.TextChannelCreateEvent;
-import net.dv8tion.jda.core.events.channel.text.TextChannelDeleteEvent;
-import net.dv8tion.jda.core.events.channel.text.update.TextChannelUpdateNameEvent;
-import net.dv8tion.jda.core.events.channel.text.update.TextChannelUpdatePermissionsEvent;
-import net.dv8tion.jda.core.events.channel.text.update.TextChannelUpdatePositionEvent;
-import net.dv8tion.jda.core.events.channel.text.update.TextChannelUpdateTopicEvent;
-import net.dv8tion.jda.core.events.channel.voice.VoiceChannelCreateEvent;
-import net.dv8tion.jda.core.events.channel.voice.VoiceChannelDeleteEvent;
-import net.dv8tion.jda.core.events.channel.voice.update.VoiceChannelUpdateNameEvent;
-import net.dv8tion.jda.core.events.channel.voice.update.VoiceChannelUpdatePermissionsEvent;
-import net.dv8tion.jda.core.events.channel.voice.update.VoiceChannelUpdatePositionEvent;
-import net.dv8tion.jda.core.events.channel.voice.update.VoiceChannelUpdateUserLimitEvent;
-import net.dv8tion.jda.core.events.emote.EmoteAddedEvent;
-import net.dv8tion.jda.core.events.emote.EmoteRemovedEvent;
-import net.dv8tion.jda.core.events.emote.update.EmoteUpdateNameEvent;
-import net.dv8tion.jda.core.events.emote.update.EmoteUpdateRolesEvent;
-import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
-import net.dv8tion.jda.core.events.role.RoleCreateEvent;
-import net.dv8tion.jda.core.events.role.RoleDeleteEvent;
-import net.dv8tion.jda.core.events.role.update.*;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
-import net.dv8tion.jda.core.managers.GuildController;
-import net.dv8tion.jda.core.requests.Response;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.events.channel.category.CategoryCreateEvent;
+import net.dv8tion.jda.api.events.channel.category.CategoryDeleteEvent;
+import net.dv8tion.jda.api.events.channel.category.update.CategoryUpdateNameEvent;
+import net.dv8tion.jda.api.events.channel.category.update.CategoryUpdatePermissionsEvent;
+import net.dv8tion.jda.api.events.channel.category.update.CategoryUpdatePositionEvent;
+import net.dv8tion.jda.api.events.channel.text.TextChannelCreateEvent;
+import net.dv8tion.jda.api.events.channel.text.TextChannelDeleteEvent;
+import net.dv8tion.jda.api.events.channel.text.update.TextChannelUpdateNameEvent;
+import net.dv8tion.jda.api.events.channel.text.update.TextChannelUpdatePermissionsEvent;
+import net.dv8tion.jda.api.events.channel.text.update.TextChannelUpdatePositionEvent;
+import net.dv8tion.jda.api.events.channel.text.update.TextChannelUpdateTopicEvent;
+import net.dv8tion.jda.api.events.channel.voice.VoiceChannelCreateEvent;
+import net.dv8tion.jda.api.events.channel.voice.VoiceChannelDeleteEvent;
+import net.dv8tion.jda.api.events.channel.voice.update.VoiceChannelUpdateNameEvent;
+import net.dv8tion.jda.api.events.channel.voice.update.VoiceChannelUpdatePermissionsEvent;
+import net.dv8tion.jda.api.events.channel.voice.update.VoiceChannelUpdatePositionEvent;
+import net.dv8tion.jda.api.events.channel.voice.update.VoiceChannelUpdateUserLimitEvent;
+import net.dv8tion.jda.api.events.emote.EmoteAddedEvent;
+import net.dv8tion.jda.api.events.emote.EmoteRemovedEvent;
+import net.dv8tion.jda.api.events.emote.update.EmoteUpdateNameEvent;
+import net.dv8tion.jda.api.events.emote.update.EmoteUpdateRolesEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import net.dv8tion.jda.api.events.role.RoleCreateEvent;
+import net.dv8tion.jda.api.events.role.RoleDeleteEvent;
+import net.dv8tion.jda.api.events.role.update.*;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.Response;
 
 import java.awt.*;
 import java.text.SimpleDateFormat;
@@ -315,7 +314,7 @@ public class Audit extends ListenerAdapter {
 
     public void onEmoteUpdateRoles(EmoteUpdateRolesEvent event) {}
 
-    /*
+    /* DEPRECATED. Reason: GuildController.addSingleRoleToMember -> Guild.addRoleToMember (same for removeSingleRoleFromMember)
     public void onGuildMessageReactionAdd(GuildMessageReactionAddEvent event) {
         if(event.getMessageIdLong() == //Message ID){
             if(event.getReaction().getReactionEmote().getName().equals("regional_indicator_y")){

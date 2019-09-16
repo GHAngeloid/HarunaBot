@@ -2,13 +2,14 @@ package harunabot;
 
 import javax.security.auth.login.LoginException;
 
-import net.dv8tion.jda.core.AccountType;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.Game;
-import net.dv8tion.jda.core.entities.Game.GameType;
-import net.dv8tion.jda.core.exceptions.RateLimitedException;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.AccountType;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.audio.factory.IAudioSendFactory;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Activity.ActivityType;
+import net.dv8tion.jda.api.exceptions.RateLimitedException;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class HarunaBot extends ListenerAdapter{
 
@@ -19,26 +20,26 @@ public class HarunaBot extends ListenerAdapter{
 
         // setting bot characteristics
         builder.setAutoReconnect(true);
-        builder.setGame(Game.of(GameType.DEFAULT, "with Taichou"));
-        builder.setAudioEnabled(true);
+        builder.setActivity(Activity.of(ActivityType.DEFAULT, "with Taichou"));
+        //builder.setAudioEnabled(true);
 
         // include Listener classes
         addListeners(builder);
 
 
         // set token to JDA and build blocking
-        JDA jda = builder.setToken(Reference.TOKEN).buildBlocking();
+        JDA jda = builder.setToken(Reference.TOKEN).build();
 
     }
 
-    public static void addListeners(JDABuilder builder) {
+    private static void addListeners(JDABuilder builder) {
 
-        builder.addEventListener(new StatusListener());
-        builder.addEventListener(new GuildMemberListener());
-        builder.addEventListener(new VoiceListener());
-        builder.addEventListener(new PMListener());
-        builder.addEventListener(new Commands());
-        builder.addEventListener(new Audit());
+        builder.addEventListeners(new StatusListener(),
+                new GuildMemberListener(),
+                new VoiceListener(),
+                new PMListener(),
+                new Commands(),
+                new Audit());
 
     }
 

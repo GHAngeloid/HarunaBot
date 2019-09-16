@@ -1,32 +1,34 @@
 package harunabot;
 
-import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.entities.PrivateChannel;
-import net.dv8tion.jda.core.events.message.priv.GenericPrivateMessageEvent;
-import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.PrivateChannel;
+import net.dv8tion.jda.api.events.message.priv.GenericPrivateMessageEvent;
+import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 //import net.dv8tion.jda.core.requests.RestAction;
-import net.dv8tion.jda.core.managers.GuildManager;
+import net.dv8tion.jda.api.managers.GuildManager;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Game;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.RichPresence.Timestamps;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Activity.Timestamps;
 //import net.dv8tion.jda.core.entities.MessageHistory;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.core.exceptions.HierarchyException;
-import net.dv8tion.jda.core.managers.GuildController;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.HierarchyException;
 
 import java.io.*;
 import java.net.*;
@@ -34,7 +36,7 @@ import java.net.*;
 public class Commands extends ListenerAdapter{
 
     @Override
-    public void onGuildMessageReceived(GuildMessageReceivedEvent event)
+    public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event)
     {
 
         // split Message content apart by whitespace
@@ -53,7 +55,7 @@ public class Commands extends ListenerAdapter{
             return;
         }
 
-        // Make sure commands stay in appropriate channel(s). Future plan on making this dynamic
+        // TODO: Make sure commands stay in appropriate channel(s). Future plan on making this dynamic
         if(command[0].startsWith(Reference.PREFIX)
                 && !(event.getChannel().getName().equalsIgnoreCase("botcommands")
                 || event.getChannel().getName().equalsIgnoreCase("bottestinglab"))){
@@ -62,8 +64,6 @@ public class Commands extends ListenerAdapter{
 
         // initialize Date
         Date now = new Date();
-
-        //System.out.println(command[0]);
 
         // osu! beatmap listener for info
         // CHANGE : include new URL for beatmaps for new website
@@ -78,13 +78,13 @@ public class Commands extends ListenerAdapter{
             }
 
             //beatmapId = command[0].substring(21);
-            String map = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY
+            String mapLink = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY
                     + beatmapId + "&type=string";
 
             HttpURLConnection conn = null;
             InputStream in = null;
             try{
-                conn = JSONReader.connect(map, Reference.OSUAPIKEY);
+                conn = JSONReader.connect(mapLink, Reference.OSUAPIKEY);
                 in = conn.getInputStream();
             }catch(IOException e){
                 return;
@@ -163,12 +163,12 @@ public class Commands extends ListenerAdapter{
                 user = command[0].substring(25);
             }
 
-            String s = "https://osu.ppy.sh/api/get_user?k=" + Reference.OSUAPIKEY + "&u=" + user + "&type=id";
+            String profileLink = "https://osu.ppy.sh/api/get_user?k=" + Reference.OSUAPIKEY + "&u=" + user + "&type=id";
 
             HttpURLConnection conn = null;
             InputStream in = null;
             try{
-                conn = JSONReader.connect(s, Reference.OSUAPIKEY);
+                conn = JSONReader.connect(profileLink, Reference.OSUAPIKEY);
                 in = conn.getInputStream();
             }catch(IOException e){
                 return;
@@ -205,7 +205,7 @@ public class Commands extends ListenerAdapter{
 
         // ping
         else if(command[0].equalsIgnoreCase("!ping")) {
-            String msg = "Pong! `" + event.getJDA().getPing() + "ms`";
+            String msg = "Pong! `" + event.getJDA().getGatewayPing() + "ms`";
             if(command.length == 1) {
                 event.getChannel().sendMessage(msg).queue();
             }else if(command.length == 2 && command[1].equalsIgnoreCase("-e")) {
@@ -301,37 +301,12 @@ public class Commands extends ListenerAdapter{
                 if(role.getName().equals("@everyone") || role.getName().equals("LIVE")) {
                     continue;
                 }
-                for(int j = 0; j < role.getPermissions().size(); j++) {
-                    //System.out.println(temp.getPermissions().get(i).getName());
-                    if(role.getPermissions().get(j).getName().equals("Administrator")
-                            || role.getPermissions().get(j).getName().equals("Kick Members")
-                            || role.getPermissions().get(j).getName().equals("Ban Members")
-                            || role.getPermissions().get(j).getName().equals("Move Members")
-                            || role.isManaged()) {
-                        isAllowed = false;
-                        break;
-                    }
-                }
 
-                if(event.getGuild().getId().equals(Reference.PUBLICGUILDID)){
-                    if(role.getName().equals("Former Community Lead")
-                            || role.getName().equalsIgnoreCase("Community Lead")
-                            || role.getName().equalsIgnoreCase("Coach/Analyst")
-                            || role.getName().equalsIgnoreCase("Scarlet Knights (D1OW)")
-                            || role.getName().equalsIgnoreCase("Scarlet Squires (D2OW)")
-                            || role.getName().equalsIgnoreCase("RU uLoL")
-                            || role.getName().equalsIgnoreCase("RU CSL (LoL)")
-                            || role.getName().equalsIgnoreCase("RUCS-A (CS:GO)")
-                            || role.getName().equalsIgnoreCase("Team Bus (Dota)")
-                            || role.getName().equalsIgnoreCase("HoTS Team")
-                            || role.getName().equalsIgnoreCase("Rocket League Division X")
-                            || role.getName().equalsIgnoreCase("Rocket League Division S")
-                            || role.getName().equalsIgnoreCase("RUCS-B1 (CS:GO)")
-                            || role.getName().equalsIgnoreCase("RUCS-B2 (CS:GO)")
-                            || role.getName().equalsIgnoreCase("JV1 (DotA)")
-                            || role.getName().equalsIgnoreCase("JV2 (DotA)")) {
-                        isAllowed = false;
-                    }
+                if(role.getPermissions().contains(Permission.ADMINISTRATOR)
+                    || role.getPermissions().contains(Permission.KICK_MEMBERS)
+                    || role.getPermissions().contains(Permission.BAN_MEMBERS)
+                    || role.isManaged()) {
+                    isAllowed = false;
                 }
                 if(isAllowed) {
                     output += role.getName() + "\n";
@@ -465,97 +440,30 @@ public class Commands extends ListenerAdapter{
                 return;
             }
 
+            // Make sure Users do not get roles that are powerful
 
-            // CASE CHECK PRIMARILY FOR PUBLIC SERVER
-            if(event.getGuild().getId().equals(Reference.PUBLICGUILDID)) {
-                // not sure if I should change
-                if(role.getName().equals("Former Community Lead")
-                        || role.getName().equals("Community Lead")
-                        || role.getName().equals("Coach/Analyst")) {
-                    event.getChannel().sendMessage("You are not allowed to add/delete this role.").queue();
-                    return;
-                }
-                // checks permissions if user can add/delete specified role
-                //Role temp = event.getGuild().getRoles().get(roleIndex);
-                for(int i = 0; i < role.getPermissions().size(); i++) {
-                    //System.out.println(temp.getPermissions().get(i).getName());
-                    if(role.getPermissions().get(i).getName().equals("Administrator")
-                            || role.getPermissions().get(i).getName().equals("Kick Members")
-                            || role.getPermissions().get(i).getName().equals("Ban Members")
-                            || role.getPermissions().get(i).getName().equals("Move Members")
-                            || role.getPermissions().get(i).getName().equals("Create Instant Invite")
-                            || role.isManaged()) {
-                        event.getChannel().sendMessage("You are not allowed to add/delete this role.").queue();
-                        return;
-
-                    }
-                }
-                // COMPETITIVE PLAYER CASE
-                // terrible looking testcase, will replace later
-                if((role.getName().equalsIgnoreCase("Scarlet Knights (D1OW)")
-                        || role.getName().equalsIgnoreCase("Scarlet Squires (D2OW)")
-                        || role.getName().equalsIgnoreCase("RU uLoL")
-                        || role.getName().equalsIgnoreCase("RU CSL (LoL)")
-                        || role.getName().equalsIgnoreCase("RUCS-A (CS:GO)")
-                        || role.getName().equalsIgnoreCase("Team Bus (DotA)")
-                        || role.getName().equalsIgnoreCase("HoTS Team")
-                        || role.getName().equalsIgnoreCase("Rocket League Division X")
-                        || role.getName().equalsIgnoreCase("Rocket League Division S")
-                        || role.getName().equalsIgnoreCase("RUCS-B1 (CS:GO)")
-                        || role.getName().equalsIgnoreCase("RUCS-B2 (CS:GO)")
-                        || role.getName().equalsIgnoreCase("JV1 (DotA)")
-                        || role.getName().equalsIgnoreCase("JV2 (DotA)"))
-                        && command[0].equalsIgnoreCase("!addrole")){
-                    event.getChannel().sendMessage("Contact an Admin/Moderator to add this role.").queue();
-                    return;
-                }
-
-                // RUTGERS PERSON CASE
-                if((role.getName().equalsIgnoreCase("Rutgers Student")
-                        || role.getName().equalsIgnoreCase("Rutgers Alumni"))
-                        && command[0].equalsIgnoreCase("!addrole")) {
-
-                    // return if User is trying to add different Unique Role
-                    if(event.getMember().getRoles().contains(event.getGuild().getRolesByName("Rutgers Student", true).get(0))
-                        || event.getMember().getRoles().contains(event.getGuild().getRolesByName("Rutgers Alumni", true).get(0))
-                            || event.getMember().getRoles().contains(event.getGuild().getRolesByName("Guest", true).get(0))){
-                        return;
-                    }
-                    // send a PM to User
-                    PrivateChannel privateChannel= event.getAuthor().openPrivateChannel().complete();
-                    privateChannel.sendMessage("You are about to add a Rutgers role from Rutgers Esports. " +
-                            "Please reply with STUDENT or ALUMNI and then your school email here (i.e. STUDENT <EMAIL ADDRESS>):").queue();
-                    return;
-                    // DO SOMETHING HERE
-                }
-            }else{
-
-                // Make sure Users do not get roles that are powerful
-                for(int i = 0; i < role.getPermissions().size(); i++) {
-                    //System.out.println(temp.getPermissions().get(i).getName());
-                    if(role.getPermissions().get(i).getName().equals("Administrator")
-                            || role.getPermissions().get(i).getName().equals("Kick Members")
-                            || role.getPermissions().get(i).getName().equals("Ban Members")
-                            || role.getPermissions().get(i).getName().equals("Move Members")
-                            || role.isManaged()) {
-                        event.getChannel().sendMessage("You are not allowed to add/delete this role.").queue();
-                        return;
-                    }
-                }
+            if(role.getPermissions().contains(Permission.ADMINISTRATOR)
+                || role.getPermissions().contains(Permission.KICK_MEMBERS)
+                || role.getPermissions().contains(Permission.BAN_MEMBERS)
+                || role.isManaged()) {
+                event.getChannel().sendMessage("You are not allowed to add/delete this role.").queue();
+                return;
             }
 
+
             // create GuildController to modify roles
-            GuildController guildControl = new GuildController(event.getGuild());
+            //GuildController guildControl = new GuildController(event.getGuild());
             EmbedBuilder eb = new EmbedBuilder();
 
             // start of deleting role
             if(command[0].equalsIgnoreCase("!deleterole")) {
                 try {
-                    guildControl.removeSingleRoleFromMember(event.getMember(), role).queue();
+                    //guildControl.removeSingleRoleFromMember(event.getMember(), role).queue();
+                    event.getGuild().removeRoleFromMember(event.getMember(), role).queue();
                     eb.setColor(role.getColor());
                     eb.setDescription("**" + roleName + "**" + " role has been removed.");
                     event.getChannel().sendMessage(eb.build()).queue();
-                }catch(HierarchyException e) {
+                }catch(NullPointerException | HierarchyException e) {
                     event.getChannel().sendMessage("You are not able to delete your highest role.").queue();
                 }
                 return;
@@ -563,11 +471,12 @@ public class Commands extends ListenerAdapter{
 
             // start of adding role
             try {
-                guildControl.addSingleRoleToMember(event.getMember(), role).queue();//works for single role
+                //guildControl.addSingleRoleToMember(event.getMember(), role).queue();//works for single role
+                event.getGuild().addRoleToMember(event.getMember(), role).queue();
                 eb.setColor(role.getColor());
                 eb.setDescription("**" + roleName + "**" + " role has been added.");
                 event.getChannel().sendMessage(eb.build()).queue();
-            }catch(HierarchyException e) {
+            }catch(NullPointerException | HierarchyException e) {
                 event.getChannel().sendMessage("You are not able to add a higher role.").queue();
             }
 
@@ -596,17 +505,12 @@ public class Commands extends ListenerAdapter{
             HttpURLConnection conn = null;
             try{
                 String site = "https://osu.ppy.sh/api/get_user_best?k=" + apikey + "&u=" + user + "&limit=5&type=string";
-                URL url = new URL(site);
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Authorization", Reference.OSUAPIKEY);
-                conn.setRequestProperty("Accept", "application/vnd.api+json");
+                conn = JSONReader.connect(site, Reference.OSUAPIKEY);
                 in = conn.getInputStream();
             }catch(IOException e){
                 event.getChannel().sendMessage("RIP").queue();
                 return;
             }
-            //BufferedReader br = null;
             StringBuffer response = null;
             try{
                 response = JSONReader.toStringBuffer(in);
@@ -629,17 +533,12 @@ public class Commands extends ListenerAdapter{
                 String score = "https://osu.ppy.sh/api/get_beatmaps?k=" + apikey + "&b="
                         + userBestResponse.getJSONObject(i).getInt("beatmap_id") + "&type=string";
                 try{
-                    URL url = new URL(score);
-                    conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setRequestProperty("Authorization", Reference.OSUAPIKEY);
-                    conn.setRequestProperty("Accept", "application/vnd.api+json");
+                    conn = JSONReader.connect(score, Reference.OSUAPIKEY);
                     in = conn.getInputStream();
                 }catch(IOException e){
                     event.getChannel().sendMessage("RIP").queue();
                     return;
                 }
-                //BufferedReader br = null;
                 response = null;
                 try{
                     response = JSONReader.toStringBuffer(in);
@@ -703,9 +602,9 @@ public class Commands extends ListenerAdapter{
             eb.setDescription(output);
             //eb.setThumbnail(event.getGuild().getIconUrl());
             SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' h:m a");
-            eb.setFooter("Created on " + event.getGuild().getCreationTime().getMonthValue() + "/"
-                    + event.getGuild().getCreationTime().getDayOfMonth() + "/"
-                    + event.getGuild().getCreationTime().getYear()
+            eb.setFooter("Created on " + event.getGuild().getTimeCreated().getMonthValue() + "/"
+                    + event.getGuild().getTimeCreated().getDayOfMonth() + "/"
+                    + event.getGuild().getTimeCreated().getYear()
                     + " | " + dateFormatter.format(now), null);
             event.getChannel().sendMessage(eb.build()).queue();
         }
@@ -713,28 +612,26 @@ public class Commands extends ListenerAdapter{
 
         // game
         else if(command[0].equalsIgnoreCase("!game")) {
-            //event.getGuild().getMembersByName("YourPrincess", true).get(0).getGame().getName()
-            // Title of Livestream
-            //event.getGuild().getMembersByName("YourPrincess", true).get(0).getGame().getUrl()
-            // URL of Livestream
-
             String user = "";
             EmbedBuilder eb = new EmbedBuilder();
 
             if(command.length == 1) {
-                Game game = event.getMember().getGame();
-                if(game != null) {
+                List<Activity> activities = event.getMember().getActivities();
+                if(activities.get(0) != null) {
                     // is RichPresence
-                    if(game.isRich()) {
-                        System.out.println(game.asRichPresence().getName() + "\n"
-                                + game.asRichPresence().getDetails() + "\n"
-                                + game.asRichPresence().getState() + "\n"
-                                + game.asRichPresence().getTimestamps());
+                    if(activities.get(0).isRich()) {
+                        eb.setDescription(event.getAuthor().getName() + "\n"
+                                + activities.get(0).asRichPresence().getName() + "\n"
+                                + activities.get(0).asRichPresence().getDetails() + "\n"
+                                + activities.get(0).asRichPresence().getState() + "\n");
+                        eb.setThumbnail(activities.get(0).asRichPresence().getLargeImage().getUrl());
+                        eb.setColor(Color.ORANGE);
+                        event.getChannel().sendMessage(eb.build()).queue();
                         return;
                     }else {
                         // not RichPresence, possible that it is a Stream
-                        System.out.println(game.getName() + " " + game.getType());
-                        eb.setDescription(event.getAuthor().getName() + " is playing " + game.getName());
+                        System.out.println(activities.get(0).getName() + " " + activities.get(0).getType());
+                        eb.setDescription(event.getAuthor().getName() + " is playing " + activities.get(0).getName());
                         eb.setColor(Color.ORANGE);
                         event.getChannel().sendMessage(eb.build()).queue();
                         return;
@@ -759,23 +656,21 @@ public class Commands extends ListenerAdapter{
                 return;
             }
             Member member = event.getGuild().getMembersByName(user, true).get(0);
-            Game game = member.getGame();
-            if(game != null) {
+            //Game game = member.getGame();
+            List<Activity> activities = member.getActivities();
+            if(activities.get(0) != null) {
                 // is RichPresence
-                if(game.isRich()) {
-                    String gameName = game.asRichPresence().getName();
+                if(activities.get(0).isRich()) {
+                    String gameName = "";
                     String gameDetails = "";
-                    try {
-                        gameDetails = game.asRichPresence().getDetails();
-                    }catch(NullPointerException e) {
-
-                    }
-                    String gameState = game.asRichPresence().getState();
+                    String gameState = "";
                     String gameTimestamps = "";
                     try {
-                        Timestamps timestamps = game.asRichPresence().getTimestamps();
+                        gameName = activities.get(0).asRichPresence().getName();
+                        gameDetails = activities.get(0).asRichPresence().getDetails();
+                        gameState = activities.get(0).asRichPresence().getState();
+                        Timestamps timestamps = activities.get(0).asRichPresence().getTimestamps();
                         gameTimestamps = "\n" + timestamps.toString();
-
                     }catch(NullPointerException e) {
 
                     }
@@ -792,17 +687,17 @@ public class Commands extends ListenerAdapter{
                 }else {
                     // not RichPresence, possible that it is a Stream
                     //game.getUrl() will always return null if DEFAULT, no STREAMING
-                    if(game.getType().toString().equals("STREAMING")) {
+                    if(activities.get(0).getType().toString().equals("STREAMING")) {
                         eb.setAuthor(member.getUser().getName() + " is streaming.", null, member.getUser().getAvatarUrl());
-                        eb.setDescription(game.getName() + "\n" + game.getUrl());
+                        eb.setDescription(activities.get(0).getName() + "\n" + activities.get(0).getUrl());
                         eb.setColor(Color.ORANGE);
                         event.getChannel().sendMessage(eb.build()).queue();
                     }else {
                         //System.out.println(game.getName() + " " + game.getType() + " " + game.getUrl());
-                        if(game.getType().toString().equals("LISTENING")) {
-                            eb.setAuthor(member.getUser().getName() + " is listening to " + game.getName(), null, member.getUser().getAvatarUrl());
+                        if(activities.get(0).getType().toString().equals("LISTENING")) {
+                            eb.setAuthor(member.getUser().getName() + " is listening to " + activities.get(0).getName(), null, member.getUser().getAvatarUrl());
                         }else {
-                            eb.setAuthor(member.getUser().getName() + " is playing " + game.getName(), null, member.getUser().getAvatarUrl());
+                            eb.setAuthor(member.getUser().getName() + " is playing " + activities.get(0).getName(), null, member.getUser().getAvatarUrl());
                         }
                         eb.setColor(Color.ORANGE);
                         event.getChannel().sendMessage(eb.build()).queue();
@@ -919,7 +814,7 @@ public class Commands extends ListenerAdapter{
                         break;
                     }
                 }catch(JSONException e){
-                    continue;
+
                 }
             }
             JSONObject stats = player.getJSONObject("attributes").getJSONObject("stats");
