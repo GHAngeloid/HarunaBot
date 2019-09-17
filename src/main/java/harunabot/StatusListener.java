@@ -10,10 +10,12 @@ import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.ReconnectedEvent;
 import net.dv8tion.jda.api.events.ShutdownEvent;
 
+import javax.annotation.Nonnull;
+
 
 public class StatusListener extends ListenerAdapter {
 
-    public void onReady(ReadyEvent event){
+    public void onReady(@Nonnull ReadyEvent event){
         for(int i = 0; i < event.getJDA().getGuilds().size(); i++) {
             System.out.printf("[+] %s (%s Members) - READY\n", event.getJDA().getGuilds().get(i).getName(),
                     event.getJDA().getGuilds().get(i).getMembers().size());
@@ -29,7 +31,7 @@ public class StatusListener extends ListenerAdapter {
 		*/
     }
 
-    public void onShutdown(ShutdownEvent event){
+    public void onShutdown(@Nonnull ShutdownEvent event){
         for(int i = 0; i < event.getJDA().getGuilds().size(); i++) {
             System.out.printf("[+] %s (%s Members) - SHUTDOWN\n", event.getJDA().getGuilds().get(i).getName(),
                     event.getJDA().getGuilds().get(i).getMembers().size());
@@ -42,7 +44,7 @@ public class StatusListener extends ListenerAdapter {
 		*/
     }
 
-    public void onDisconnect(DisconnectEvent event) {
+    public void onDisconnect(@Nonnull DisconnectEvent event) {
         for(int i = 0; i < event.getJDA().getGuilds().size(); i++) {
             System.out.printf("[+] %s (%s Members) - DISCONNECTED\n", event.getJDA().getGuilds().get(i).getName(),
                     event.getJDA().getGuilds().get(i).getMembers().size());
@@ -55,7 +57,7 @@ public class StatusListener extends ListenerAdapter {
 		*/
     }
 
-    public void onReconnect(ReconnectedEvent event) {
+    public void onReconnect(@Nonnull ReconnectedEvent event) {
         for(int i = 0; i < event.getJDA().getGuilds().size(); i++) {
             System.out.printf("[+] %s (%s Members) - RECONNECTED\n", event.getJDA().getGuilds().get(i).getName(),
                     event.getJDA().getGuilds().get(i).getMembers().size());

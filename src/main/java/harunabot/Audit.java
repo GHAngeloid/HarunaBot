@@ -29,6 +29,7 @@ import net.dv8tion.jda.api.events.role.update.*;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.Response;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
@@ -37,7 +38,7 @@ import java.util.Date;
 public class Audit extends ListenerAdapter {
 
     // Text Channel Events
-    public void onTextChannelCreate(TextChannelCreateEvent event) {
+    public void onTextChannelCreate(@Nonnull TextChannelCreateEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.GREEN);
         eb.setDescription("Created text channel **" + event.getChannel().getName() + "**");
@@ -49,7 +50,7 @@ public class Audit extends ListenerAdapter {
 
     }
 
-    public void onTextChannelDelete(TextChannelDeleteEvent event) {
+    public void onTextChannelDelete(@Nonnull TextChannelDeleteEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.RED);
         eb.setDescription("Deleted text channel **" + event.getChannel().getName() + "**");
@@ -60,7 +61,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
-    public void onTextChannelUpdateName(TextChannelUpdateNameEvent event) {
+    public void onTextChannelUpdateName(@Nonnull TextChannelUpdateNameEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
         eb.setDescription("The text channel **" + event.getOldName() + "** has been renamed to **"
@@ -72,10 +73,8 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
-    public void onTextChannelUpdateTopic(TextChannelUpdateTopicEvent event) {
-        if(event.getNewTopic().equals(null)){
-            return;
-        }
+    public void onTextChannelUpdateTopic(@Nonnull TextChannelUpdateTopicEvent event) {
+
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
         eb.setDescription("The text channel **" + event.getChannel().getName() + "** changed its topic from **"
@@ -101,13 +100,13 @@ public class Audit extends ListenerAdapter {
     }
     */
 
-    public void onTextChannelUpdatePermissions(TextChannelUpdatePermissionsEvent event) {
+    public void onTextChannelUpdatePermissions(@Nonnull TextChannelUpdatePermissionsEvent event) {
         // This one is tricky
     }
 
 
     // Voice Channel Events
-    public void onVoiceChannelCreate(VoiceChannelCreateEvent event) {
+    public void onVoiceChannelCreate(@Nonnull VoiceChannelCreateEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.GREEN);
         eb.setDescription("Created voice channel **" + event.getChannel().getName() + "**");
@@ -118,7 +117,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
-    public void onVoiceChannelDelete(VoiceChannelDeleteEvent event) {
+    public void onVoiceChannelDelete(@Nonnull VoiceChannelDeleteEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.RED);
         eb.setDescription("Deleted voice channel **" + event.getChannel().getName() + "**");
@@ -129,7 +128,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
-    public void onVoiceChannelUpdateName(VoiceChannelUpdateNameEvent event) {
+    public void onVoiceChannelUpdateName(@Nonnull VoiceChannelUpdateNameEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
         eb.setDescription("The voice channel **" + event.getOldName() + "** has been renamed to **"
@@ -155,12 +154,12 @@ public class Audit extends ListenerAdapter {
     }
     */
 
-    public void onVoiceChannelUpdatePermissions(VoiceChannelUpdatePermissionsEvent event) {}
-    public void onVoiceChannelUpdateUserLimit(VoiceChannelUpdateUserLimitEvent event) {}
+    public void onVoiceChannelUpdatePermissions(@Nonnull VoiceChannelUpdatePermissionsEvent event) {}
+    public void onVoiceChannelUpdateUserLimit(@Nonnull VoiceChannelUpdateUserLimitEvent event) {}
 
 
     // Category Events
-    public void onCategoryCreate(CategoryCreateEvent event) {
+    public void onCategoryCreate(@Nonnull CategoryCreateEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.GREEN);
         eb.setDescription("Created category **" + event.getCategory().getName() + "**");
@@ -171,7 +170,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
-    public void onCategoryDelete(CategoryDeleteEvent event) {
+    public void onCategoryDelete(@Nonnull CategoryDeleteEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.RED);
         eb.setDescription("Deleted category **" + event.getCategory().getName() + "**");
@@ -182,7 +181,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
-    public void onCategoryUpdateName(CategoryUpdateNameEvent event) {
+    public void onCategoryUpdateName(@Nonnull CategoryUpdateNameEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
         eb.setDescription("The category **" + event.getOldName() + "** has been renamed to **"
@@ -208,12 +207,12 @@ public class Audit extends ListenerAdapter {
     }
     */
 
-    public void onCategoryUpdatePermissions(CategoryUpdatePermissionsEvent event) {
+    public void onCategoryUpdatePermissions(@Nonnull CategoryUpdatePermissionsEvent event) {
         // HARD
     }
 
     // Role Events
-    public void onRoleCreate(RoleCreateEvent event) {
+    public void onRoleCreate(@Nonnull RoleCreateEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.GREEN);
         eb.setDescription("Created role **" + event.getRole().getName() + "**");
@@ -224,7 +223,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
-    public void onRoleDelete(RoleDeleteEvent event) {
+    public void onRoleDelete(@Nonnull RoleDeleteEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.RED);
         eb.setDescription("Deleted role **" + event.getRole().getName() + "**");
@@ -235,7 +234,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
-    public void onRoleUpdateName(RoleUpdateNameEvent event) {
+    public void onRoleUpdateName(@Nonnull RoleUpdateNameEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
         eb.setDescription("The role **" + event.getOldName() + "** has been renamed to **"
@@ -247,7 +246,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
-    public void onRoleUpdateColor(RoleUpdateColorEvent event) {
+    public void onRoleUpdateColor(@Nonnull RoleUpdateColorEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
         eb.setDescription("The role **" + event.getRole().getName() + "** had its color changed.");
@@ -272,13 +271,13 @@ public class Audit extends ListenerAdapter {
     }
     */
 
-    public void onRoleUpdateHoisted(RoleUpdateHoistedEvent event) {}
-    public void onRoleUpdateMentionable(RoleUpdateMentionableEvent event) {}
-    public void onRoleUpdatePermissions(RoleUpdatePermissionsEvent event) {}
+    public void onRoleUpdateHoisted(@Nonnull RoleUpdateHoistedEvent event) {}
+    public void onRoleUpdateMentionable(@Nonnull RoleUpdateMentionableEvent event) {}
+    public void onRoleUpdatePermissions(@Nonnull RoleUpdatePermissionsEvent event) {}
 
 
     // Emote Events
-    public void onEmoteAdded(EmoteAddedEvent event) {
+    public void onEmoteAdded(@Nonnull EmoteAddedEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.GREEN);
         eb.setDescription("Created emote **" + event.getEmote().getName() + "**");
@@ -289,7 +288,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
-    public void onEmoteRemoved(EmoteRemovedEvent event) {
+    public void onEmoteRemoved(@Nonnull EmoteRemovedEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.RED);
         eb.setDescription("Deleted emote **" + event.getEmote().getName() + "**");
@@ -300,7 +299,7 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
-    public void onEmoteUpdateName(EmoteUpdateNameEvent event) {
+    public void onEmoteUpdateName(@Nonnull EmoteUpdateNameEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
         eb.setDescription("The emote **" + event.getOldName() + "**" + " has been renamed to **"
@@ -312,18 +311,6 @@ public class Audit extends ListenerAdapter {
                 .sendMessage(eb.build()).queue();
     }
 
-    public void onEmoteUpdateRoles(EmoteUpdateRolesEvent event) {}
-
-    /* DEPRECATED. Reason: GuildController.addSingleRoleToMember -> Guild.addRoleToMember (same for removeSingleRoleFromMember)
-    public void onGuildMessageReactionAdd(GuildMessageReactionAddEvent event) {
-        if(event.getMessageIdLong() == //Message ID){
-            if(event.getReaction().getReactionEmote().getName().equals("regional_indicator_y")){
-                GuildController gc = new GuildController(event.getGuild());
-                gc.addSingleRoleToMember(event.getMember(), event.getGuild().getRolesByName("Loli", true).get(0)).queue();
-            }
-        }
-    }
-    */
-
+    public void onEmoteUpdateRoles(@Nonnull EmoteUpdateRolesEvent event) {}
 
 }

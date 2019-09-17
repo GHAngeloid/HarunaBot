@@ -2,7 +2,7 @@ package harunabot;
 
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.PrivateChannel;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.priv.GenericPrivateMessageEvent;
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -22,11 +22,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Activity.Timestamps;
 //import net.dv8tion.jda.core.entities.MessageHistory;
-import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 
@@ -41,7 +38,6 @@ public class Commands extends ListenerAdapter{
 
         // split Message content apart by whitespace
         String[] command = event.getMessage().getContentRaw().split(" ");
-        //String message = event.getMessage().getContent();
 
         /* DEPRECATED. Reason: Infinite Prints
         // owo listener
@@ -53,6 +49,50 @@ public class Commands extends ListenerAdapter{
         // Check if command does not start with '!' or the website is not osu!
         if(!command[0].startsWith(Reference.PREFIX) && !command[0].startsWith("https://osu.ppy.sh/")) {
             return;
+        }
+
+        // Name : Current Channel Name with the addition of changing it
+        if(command[0].equalsIgnoreCase("!name")) {
+            if(event.getMember().isOwner()) {
+                if (command.length > 1) {
+                    if (command[1].equals("-edit")) {
+                        String s = "";
+                        // retrieve new topic
+                        for (int i = 2; i < command.length; i++) {
+                            s += command[i];
+                        }
+                        if(s.isEmpty()) {
+                            return;
+                        }
+                        event.getChannel().getManager().setName(s).queue();
+                    }
+                } else {
+                    event.getChannel().sendMessage("Name of text channel -> " + event.getChannel().getName()).queue();
+                }
+            }
+        }
+
+        // Topic : Discover current topic as well as changing it
+        else if(command[0].equalsIgnoreCase("!topic")) {
+            if(event.getMember().isOwner()) {
+                if (command.length > 1) {
+                    if (command[1].equals("-edit")) {
+                        String s = "";
+                        // retrieve new topic
+                        for (int i = 2; i < command.length; i++) {
+                            s += command[i] + " ";
+                        }
+                        event.getChannel().getManager().setTopic(s).queue();
+                    }
+                } else {
+                    if (event.getChannel().getTopic() == null || event.getChannel().getTopic().isEmpty()) {
+                        event.getChannel().sendMessage("There is no topic on this channel.").queue();
+                    } else {
+                        event.getChannel().sendMessage("Today's topic on **" + event.getChannel().getName()
+                                + "** -> " + event.getChannel().getTopic()).queue();
+                    }
+                }
+            }
         }
 
         // TODO: Make sure commands stay in appropriate channel(s). Future plan on making this dynamic
@@ -220,21 +260,14 @@ public class Commands extends ListenerAdapter{
 
         // help
         else if(command[0].equalsIgnoreCase("!help")){
-            String output = "**List of commands:**\n!ping\n!roll\n!emotes\n!rolelist\n"
-                    + "!server\n!love\n!addrole\n!deleterole\n!osutopscores\n!game\n!pubg";
+            String output = "**List of commands:**\n!ping\n!roll\n!emotes\n!role\n"
+                    + "!server\n!love\n!osu\n!game";
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
             eb.setDescription(output);
             event.getChannel().sendMessage(eb.build()).queue();
             //need to find a better solution to print all commands through a message
         }
-
-        /* DEPRECATED
-        // tips
-        else if(command[0].equalsIgnoreCase("!tips")){
-            event.getChannel().sendMessage(event.getAuthor().getAsMention() + " PLAY MORE!").queue();
-        }//returns "PLAY MORE!"
-        */
 
 
         // roll
@@ -261,25 +294,6 @@ public class Commands extends ListenerAdapter{
         }//returns a random # from 1 to 100
 
 
-        /* DEPRECATED
-        // roles
-		else if(command[0].equalsIgnoreCase("!rolesize")){
-			event.getChannel().sendMessage("# of Roles: "+event.getGuild().getRoles().size()).queue();
-		}//returns # of roles
-        */
-
-
-        // TEST METHOD
-        /*
-        else if(command[0].equalsIgnoreCase("!test")){
-            int total = event.getChannel().getHistory().size();
-            event.getChannel().getHistory().;
-            event.getChannel().sendMessage(event.getChannel().getName() + ": " + total).queue();
-
-        }
-        */
-
-
         // emotes
         else if(command[0].equalsIgnoreCase("!emotes")){
             String output = "**Server Emotes:**\n" + emotePrint(event);
@@ -289,38 +303,6 @@ public class Commands extends ListenerAdapter{
             event.getChannel().sendMessage(eb.build()).queue();
         }//returns all of the server emotes
 
-
-        // rolelist
-        else if(command[0].equals("!rolelist")){
-            String output = "**List of available roles:**\n";
-            // Display roles that are allowed. Make it Permission sensitive!
-            Role role;
-            boolean isAllowed = true;
-            for(int i = 0; i < event.getGuild().getRoles().size(); i++){
-                role = event.getGuild().getRoles().get(i);
-                if(role.getName().equals("@everyone") || role.getName().equals("LIVE")) {
-                    continue;
-                }
-
-                if(role.getPermissions().contains(Permission.ADMINISTRATOR)
-                    || role.getPermissions().contains(Permission.KICK_MEMBERS)
-                    || role.getPermissions().contains(Permission.BAN_MEMBERS)
-                    || role.isManaged()) {
-                    isAllowed = false;
-                }
-                if(isAllowed) {
-                    output += role.getName() + "\n";
-                }else{
-                    isAllowed = true;
-                }
-            }
-            //event.getChannel().sendMessage(output).queue();
-            //System.out.println(output);
-            EmbedBuilder eb = new EmbedBuilder();
-            eb.setColor(Color.ORANGE);
-            eb.setDescription(output);
-            event.getChannel().sendMessage(eb.build()).queue();
-        }//returns all roles in server
 
         /* DEPRECATED
         // choose
@@ -363,6 +345,7 @@ public class Commands extends ListenerAdapter{
 		}// returns the arg that is chosen
 		*/
 
+
         // love
         else if(command[0].equalsIgnoreCase("!love")) {
             int maxMembers = event.getGuild().getMembers().size();
@@ -378,10 +361,10 @@ public class Commands extends ListenerAdapter{
             event.getChannel().sendMessage(eb.build()).queue();
         }// returns the user "loving" a random user in guild
 
-        // giveaway
 
+        // giveaway
         else if(command[0].equalsIgnoreCase("!giveaway")) {
-            if(!event.getAuthor().getName().equals(event.getGuild().getOwner().getUser().getName())) {
+            if(!event.getMember().isOwner()) {
                 return;
             }//tests if author is the owner
             int maxMembers = event.getGuild().getMembers().size();
@@ -389,198 +372,206 @@ public class Commands extends ListenerAdapter{
             do {
                 winner = event.getGuild().getMembers().get(roll(maxMembers)).getUser().getName();
             }while(event.getAuthor().getName().equals(winner));
-            event.getChannel().sendMessage("Winner: " + winner);
+            event.getChannel().sendMessage("Winner: " + winner).queue();
             //System.out.println("Winner: "+winner);
         }// returns the winner of the giveaway
 
 
-        // add role or delete role
-        // <command> <role>
-        else if(command[0].equalsIgnoreCase("!addrole") || command[0].equalsIgnoreCase("!deleterole")) {
-            // include case that tests if author is owner
-
-            // include code for the Confirmed role where they must PM the bot a valid confirmation
-
-            if(command.length < 2) {
-                event.getChannel().sendMessage("ERROR! Incorrect format. <!addrole | !deleterole> <role>.").queue();
-                return;
-            }
-            // insert loop to find role (i.e. New Jersey)
-            String roleName = ""; // role name
-            roleName = command[1];
-            if(command.length > 2) {
-                for(int i = 2; i < command.length; i++) {
-                    roleName = roleName.concat(" " + command[i]);
+        else if(command[0].equalsIgnoreCase("!role")) {
+            // Assuming first time User of command
+            if(command.length > 1) {
+                if(command[1].equalsIgnoreCase("-help")) {
+                    event.getChannel().sendMessage("Command flags to use after **!role**: -list -info").queue();
                 }
-            }
-            //System.out.println(roleName);
-            //int roleIndex = 0;
-            Role role = null;
-            for(int i = 0; i < event.getGuild().getRoles().size(); i++) {
-                if(roleName.equalsIgnoreCase(event.getGuild().getRoles().get(i).getName())) {
-                    //roleIndex =  i;
-                    role = event.getGuild().getRoles().get(i);
-                    roleName = role.getName();
-                    break;
-                }
-                if(i + 1 == event.getGuild().getRoles().size()) {
-                    event.getChannel().sendMessage("ERROR! Role does not exist.").queue();
-                    return;
-                }// locates the role in List<Role>
-                // include case if the role does not exist
-            }
+                // Replaces !rolelist command
+                else if(command[1].equalsIgnoreCase("-list")) {
+                    String output = "**List of available roles:**\n";
+                    // Display roles that are allowed. Make it Permission sensitive!
+                    Role role;
+                    boolean isAllowed = true;
+                    for(int i = 0; i < event.getGuild().getRoles().size(); i++){
+                        role = event.getGuild().getRoles().get(i);
+                        if(role.getName().equals("@everyone") || role.getName().equals("LIVE")) {
+                            continue;
+                        }
 
-            // if role is already
-            if(command[0].equalsIgnoreCase("!addrole") && event.getMember().getRoles().contains(role)){
-                return;
-            }
-
-            if(role.getName().equalsIgnoreCase("LIVE")){
-                event.getChannel().sendMessage("You are not allowed to add/delete this role.").queue();
-                return;
-            }
-
-            // Make sure Users do not get roles that are powerful
-
-            if(role.getPermissions().contains(Permission.ADMINISTRATOR)
-                || role.getPermissions().contains(Permission.KICK_MEMBERS)
-                || role.getPermissions().contains(Permission.BAN_MEMBERS)
-                || role.isManaged()) {
-                event.getChannel().sendMessage("You are not allowed to add/delete this role.").queue();
-                return;
-            }
-
-
-            // create GuildController to modify roles
-            //GuildController guildControl = new GuildController(event.getGuild());
-            EmbedBuilder eb = new EmbedBuilder();
-
-            // start of deleting role
-            if(command[0].equalsIgnoreCase("!deleterole")) {
-                try {
-                    //guildControl.removeSingleRoleFromMember(event.getMember(), role).queue();
-                    event.getGuild().removeRoleFromMember(event.getMember(), role).queue();
-                    eb.setColor(role.getColor());
-                    eb.setDescription("**" + roleName + "**" + " role has been removed.");
+                        if(role.getPermissions().contains(Permission.ADMINISTRATOR)
+                                || role.getPermissions().contains(Permission.KICK_MEMBERS)
+                                || role.getPermissions().contains(Permission.BAN_MEMBERS)
+                                || role.isManaged()) {
+                            isAllowed = false;
+                        }
+                        if(isAllowed) {
+                            output += role.getName() + "\n";
+                        }else{
+                            isAllowed = true;
+                        }
+                    }
+                    EmbedBuilder eb = new EmbedBuilder();
+                    eb.setColor(Color.ORANGE);
+                    eb.setDescription(output);
                     event.getChannel().sendMessage(eb.build()).queue();
-                }catch(NullPointerException | HierarchyException e) {
-                    event.getChannel().sendMessage("You are not able to delete your highest role.").queue();
                 }
-                return;
+                // Where to get roles?
+                else if(command[1].equalsIgnoreCase("-info")) {
+                    event.getChannel().sendMessage("Assignable roles can be found in **#roles**.").queue();
+                }
             }
-
-            // start of adding role
-            try {
-                //guildControl.addSingleRoleToMember(event.getMember(), role).queue();//works for single role
-                event.getGuild().addRoleToMember(event.getMember(), role).queue();
-                eb.setColor(role.getColor());
-                eb.setDescription("**" + roleName + "**" + " role has been added.");
-                event.getChannel().sendMessage(eb.build()).queue();
-            }catch(NullPointerException | HierarchyException e) {
-                event.getChannel().sendMessage("You are not able to add a higher role.").queue();
-            }
-
         }
 
 
-        // osutopscores
-        else if(command[0].equalsIgnoreCase("!osutopscores")) {
-            String apikey = Reference.OSUAPIKEY;
-            JSONArray json = null;
-            String user = "";
+        // osu
+        else if(command[0].equalsIgnoreCase("!osu")) {
+            if(command.length == 1) {
+                event.getChannel().sendMessage("https://osu.ppy.sh").queue();
+            }
+            if(command.length > 1) {
+                if(command[1].equalsIgnoreCase("-help")) {
+                    event.getChannel().sendMessage("Command flags to use after **!osu**: -topscores -recent").queue();
+                }
+                // Top Scores
+                else if(command[1].equalsIgnoreCase("-topscores")) {
+                    JSONArray json = null;
+                    String user = "";
+                    if(command.length < 3) {
+                        return;
+                    }
+                    user = command[2];
+                    for (int i = 3; i < command.length; i++) {
+                        user += " " + command[i];
+                    }
 
-            if(command.length < 2) {
-                event.getChannel().sendMessage("Incorrect command format. !osutopscores <Username>").queue();
-                return;
-            } else if(command.length == 2){
-                user = command[1];
-            }else {
-                user = command[1];
-                for (int i = 2; i < command.length; i++) {
-                    user += " " + command[i];
+                    InputStream in = null;
+                    HttpURLConnection conn = null;
+                    StringBuffer response = null;
+                    try{
+                        String site = "https://osu.ppy.sh/api/get_user_best?k=" + Reference.OSUAPIKEY + "&u=" + user + "&limit=5&type=string";
+                        conn = JSONReader.connect(site, Reference.OSUAPIKEY);
+                        in = conn.getInputStream();
+                        response = JSONReader.toStringBuffer(in);
+                    }catch(IOException e){
+                        event.getChannel().sendMessage("RIP").queue();
+                        return;
+                    }
+                    conn.disconnect();
+                    //print in String
+                    //System.out.println(response.toString());
+
+                    //Read JSON response and print
+                    JSONArray userBestResponse = new JSONArray(response.toString());
+                    int userId = userBestResponse.getJSONObject(0).getInt("user_id");
+                    JSONObject data = null;
+                    String title = user + "'s Top Scores";
+                    String mapData = "";
+
+                    // iterates through each beatmap to get it's metadata
+                    for(int i = 0; i < userBestResponse.length(); i++) {
+                        String score = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY + "&b="
+                                + userBestResponse.getJSONObject(i).getInt("beatmap_id") + "&type=string";
+                        try{
+                            conn = JSONReader.connect(score, Reference.OSUAPIKEY);
+                            in = conn.getInputStream();
+                            response = JSONReader.toStringBuffer(in);
+                        }catch(IOException e){
+                            event.getChannel().sendMessage("RIP").queue();
+                            return;
+                        }
+                        conn.disconnect();
+                        //print in String
+                        //System.out.println(response.toString());
+
+                        //Read JSON response and print
+                        JSONArray beatmapMetadataResponse = new JSONArray(response.toString());
+                        data = beatmapMetadataResponse.getJSONObject(0);
+
+                        //System.out.println(data.toString());
+                        int modCode = userBestResponse.getJSONObject(i).getInt("enabled_mods");
+                        String mods = osuModReader(modCode);
+                        mapData += "\n" + data.getString("artist") + " - " + data.getString("title") + " [" + data.getString("version") + "]"
+                                + " by " + data.getString("creator") + "\n"
+                                + String.format("%.2f", userBestResponse.getJSONObject(i).getDouble("pp")) + "pp\n"
+                                + "Mods: " + mods + "\t" + "Rank: " + userBestResponse.getJSONObject(i).getString("rank") + "\n";
+                    }
+                    //https://osu.ppy.sh/images/badges/score-ranks/Score-SS-Small-60@2x.png
+
+                    EmbedBuilder eb = new EmbedBuilder();
+                    eb.setAuthor(title, "https://osu.ppy.sh/users/" + userId, "https://a.ppy.sh/" + userId);
+                    eb.setColor(Color.ORANGE);
+                    eb.setDescription(mapData);
+                    eb.setFooter("osu!", "https://osu.ppy.sh/images/layout/osu-logo@2x.png");
+                    event.getChannel().sendMessage(eb.build()).queue();
+                }
+                // Recent Plays
+                else if(command[1].equalsIgnoreCase("-recent")) {
+                    // TODO: COMPLETE RECENT PLAYS
+                    JSONArray json = null;
+                    String user = "";
+                    if(command.length < 3) {
+                        return;
+                    }
+                    user = command[2];
+                    for (int i = 3; i < command.length; i++) {
+                        user += " " + command[i];
+                    }
+
+                    InputStream in = null;
+                    HttpURLConnection conn = null;
+                    StringBuffer response = null;
+                    try{
+                        String site = "https://osu.ppy.sh/api/get_user_recent?k=" + Reference.OSUAPIKEY + "&u=" + user + "&limit=5&type=string";
+                        conn = JSONReader.connect(site, Reference.OSUAPIKEY);
+                        in = conn.getInputStream();
+                        response = JSONReader.toStringBuffer(in);
+                    }catch(IOException e){
+                        event.getChannel().sendMessage("RIP").queue();
+                        return;
+                    }
+                    conn.disconnect();
+
+                    JSONArray userRecentResponse = new JSONArray(response.toString());
+                    // if there are no recent scores
+                    if(userRecentResponse.isEmpty()) {
+                        event.getChannel().sendMessage(user + "did not set any scores within the past 24 hours.").queue();
+                    }
+                    int userId = userRecentResponse.getJSONObject(0).getInt("user_id");
+                    JSONObject data = null;
+                    String mapData = "";
+
+                    for(int i = 0; i < userRecentResponse.length(); i++) {
+                        String score = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY + "&b="
+                                + userRecentResponse.getJSONObject(i).getInt("beatmap_id") + "&type=string";
+                        try{
+                            conn = JSONReader.connect(score, Reference.OSUAPIKEY);
+                            in = conn.getInputStream();
+                            response = JSONReader.toStringBuffer(in);
+                        }catch(IOException e){
+                            event.getChannel().sendMessage("RIP").queue();
+                            return;
+                        }
+                        conn.disconnect();
+
+                        //Read JSON response and print
+                        JSONArray beatmapMetadataResponse = new JSONArray(response.toString());
+                        data = beatmapMetadataResponse.getJSONObject(0);
+
+                        //System.out.println(data.toString());
+                        int modCode = userRecentResponse.getJSONObject(i).getInt("enabled_mods");
+                        String mods = osuModReader(modCode);
+                        mapData += "\n" + data.getString("artist") + " - " + data.getString("title") + " [" + data.getString("version") + "]"
+                                + " by " + data.getString("creator") + "\n"
+                                + "Mods: " + mods + "\t" + "Rank: " + userRecentResponse.getJSONObject(i).getString("rank") + "\n";
+                    }
+
+                    EmbedBuilder eb = new EmbedBuilder();
+                    eb.setAuthor(user, "https://osu.ppy.sh/users/" + userId, "https://a.ppy.sh/" + userId);
+                    eb.setColor(Color.ORANGE);
+                    eb.setDescription(mapData);
+                    eb.setFooter("osu!", "https://osu.ppy.sh/images/layout/osu-logo@2x.png");
+                    event.getChannel().sendMessage(eb.build()).queue();
+
                 }
             }
 
-            InputStream in = null;
-            HttpURLConnection conn = null;
-            try{
-                String site = "https://osu.ppy.sh/api/get_user_best?k=" + apikey + "&u=" + user + "&limit=5&type=string";
-                conn = JSONReader.connect(site, Reference.OSUAPIKEY);
-                in = conn.getInputStream();
-            }catch(IOException e){
-                event.getChannel().sendMessage("RIP").queue();
-                return;
-            }
-            StringBuffer response = null;
-            try{
-                response = JSONReader.toStringBuffer(in);
-            }catch(IOException e){
-                return;
-            }
-            conn.disconnect();
-            //print in String
-            //System.out.println(response.toString());
-
-            //Read JSON response and print
-            JSONArray userBestResponse = new JSONArray(response.toString());
-            int userId = userBestResponse.getJSONObject(0).getInt("user_id");
-            //System.out.println(userId);
-            JSONObject data = null;
-            String output = "**" + user + "'s Top Scores**\n"
-                    + "";
-            // iterates through each beatmap to get it's metadata
-            for(int i = 0; i < userBestResponse.length(); i++) {
-                String score = "https://osu.ppy.sh/api/get_beatmaps?k=" + apikey + "&b="
-                        + userBestResponse.getJSONObject(i).getInt("beatmap_id") + "&type=string";
-                try{
-                    conn = JSONReader.connect(score, Reference.OSUAPIKEY);
-                    in = conn.getInputStream();
-                }catch(IOException e){
-                    event.getChannel().sendMessage("RIP").queue();
-                    return;
-                }
-                response = null;
-                try{
-                    response = JSONReader.toStringBuffer(in);
-                }catch(IOException e){
-                    return;
-                }
-                conn.disconnect();
-                //print in String
-                //System.out.println(response.toString());
-
-                //Read JSON response and print
-                JSONArray beatmapMetadataResponse = new JSONArray(response.toString());
-                data = beatmapMetadataResponse.getJSONObject(0);
-
-                /*
-                try {
-                    data = JSONReader.URLtoJSON(score);//calls JSONReader class to convert URL contents to JSONObject
-                }catch(JSONException | IOException e) {
-                    event.getChannel().sendMessage("ERROR").queue();
-                }
-                */
-
-                //System.out.println(data.toString());
-                int modCode = userBestResponse.getJSONObject(i).getInt("enabled_mods");
-                String mods = osuModReader(modCode);
-                output += "\n" + data.getString("artist") + " - " + data.getString("title") + " [" + data.getString("version") + "]"
-                        + " by " + data.getString("creator") + "\n"
-                        + String.format("%.2f", userBestResponse.getJSONObject(i).getDouble("pp")) + "pp\n"
-                        + "Mods: " + mods + "\t" + "Rank: " + userBestResponse.getJSONObject(i).getString("rank") + "\n";
-            }
-            //https://osu.ppy.sh/images/badges/score-ranks/Score-SS-Small-60@2x.png
-
-            EmbedBuilder eb = new EmbedBuilder();
-            eb.setColor(Color.ORANGE);
-            eb.setDescription(output);
-            try {
-                eb.setThumbnail("https://a.ppy.sh/" + userId);
-            }catch(JSONException e) {
-                return;
-            }
-            eb.setFooter("osu!", "https://osu.ppy.sh/images/layout/osu-logo@2x.png");
-            event.getChannel().sendMessage(eb.build()).queue();
         }
 
 
@@ -600,8 +591,7 @@ public class Commands extends ListenerAdapter{
             eb.setColor(Color.ORANGE);
             eb.setAuthor(event.getGuild().getName(), null, event.getGuild().getIconUrl());
             eb.setDescription(output);
-            //eb.setThumbnail(event.getGuild().getIconUrl());
-            SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' h:m a");
+            SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' h:m a z");
             eb.setFooter("Created on " + event.getGuild().getTimeCreated().getMonthValue() + "/"
                     + event.getGuild().getTimeCreated().getDayOfMonth() + "/"
                     + event.getGuild().getTimeCreated().getYear()
@@ -620,8 +610,8 @@ public class Commands extends ListenerAdapter{
                 if(activities.get(0) != null) {
                     // is RichPresence
                     if(activities.get(0).isRich()) {
-                        eb.setDescription(event.getAuthor().getName() + "\n"
-                                + activities.get(0).asRichPresence().getName() + "\n"
+                        eb.setAuthor(event.getAuthor().getName(), null, event.getAuthor().getAvatarUrl());
+                        eb.setDescription(activities.get(0).asRichPresence().getName() + "\n"
                                 + activities.get(0).asRichPresence().getDetails() + "\n"
                                 + activities.get(0).asRichPresence().getState() + "\n");
                         eb.setThumbnail(activities.get(0).asRichPresence().getLargeImage().getUrl());
@@ -637,7 +627,6 @@ public class Commands extends ListenerAdapter{
                         return;
                     }
                 }else {
-                    //System.out.println("You are not playing a game right now.");
                     eb.setColor(Color.ORANGE);
                     eb.setDescription("You are not playing a game right now.");
                     event.getChannel().sendMessage(eb.build()).queue();
@@ -651,36 +640,37 @@ public class Commands extends ListenerAdapter{
             }else {
                 user = command[1];
             }
-            //System.out.println(user);
             if(event.getGuild().getMembersByName(user, true).isEmpty()) {
                 return;
             }
             Member member = event.getGuild().getMembersByName(user, true).get(0);
-            //Game game = member.getGame();
             List<Activity> activities = member.getActivities();
-            if(activities.get(0) != null) {
+            if(!activities.isEmpty()) {
                 // is RichPresence
                 if(activities.get(0).isRich()) {
                     String gameName = "";
                     String gameDetails = "";
-                    String gameState = "";
                     String gameTimestamps = "";
                     try {
                         gameName = activities.get(0).asRichPresence().getName();
                         gameDetails = activities.get(0).asRichPresence().getDetails();
-                        gameState = activities.get(0).asRichPresence().getState();
                         Timestamps timestamps = activities.get(0).asRichPresence().getTimestamps();
                         gameTimestamps = "\n" + timestamps.toString();
                     }catch(NullPointerException e) {
-
+                        return;
                     }
 
                     System.out.println(gameName + "\n"
                             + gameDetails + "\n"
-                            + gameState
                             + gameTimestamps);
-                    eb.setAuthor(member.getUser().getName() + " is playing " + gameName, null, member.getUser().getAvatarUrl());
-                    //eb.setDescription(gameDetails + " in " + gameState);
+                    eb.setAuthor(member.getUser().getName(), null, member.getUser().getAvatarUrl());
+                    eb.setDescription(gameName + "\n" + gameDetails);
+                    try{
+                        eb.setThumbnail(activities.get(0).asRichPresence().getLargeImage().getUrl());
+                    }
+                    catch(NullPointerException e) {
+
+                    }
                     eb.setColor(Color.ORANGE);
                     event.getChannel().sendMessage(eb.build()).queue();
 
@@ -710,149 +700,8 @@ public class Commands extends ListenerAdapter{
             }
         }
 
-        //event.getJDA().shutdownNow();
-
-        //kick member???
-
         // pic/gif commands
 
-
-        // pubg
-        else if(command[0].equalsIgnoreCase("!pubg")){
-            // data from latest match
-            String user = "";
-            if(command.length == 1){
-                event.getChannel().sendMessage("ERROR! Must be: !pubg <Steam Name>").queue();
-                return;
-            }
-            user = command[1];
-            if(command.length > 2){
-                for(int i = 2; i < command.length; i++){
-                    user = user.concat(" " + command[i]);
-                }
-            }
-            InputStream in = null;
-            HttpURLConnection conn = null;
-            try{
-                URL url = new URL("https://api.playbattlegrounds.com/shards/pc-na/players?filter[playerNames]=" + user);
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Authorization", Reference.PUBGAPIKEY);
-                conn.setRequestProperty("Accept", "application/vnd.api+json");
-                in = conn.getInputStream();
-            }catch(IOException e){
-                event.getChannel().sendMessage("Invalid Player Name. Must be in NA region on PC.");
-                return;
-            }
-            //BufferedReader br = null;
-            StringBuffer response = null;
-            try{
-                response = JSONReader.toStringBuffer(in);
-            }catch(IOException e){
-                return;
-            }
-            conn.disconnect();
-            //print in String
-            //System.out.println(response.toString());
-
-            //Read JSON response and print
-            JSONObject myResponse = new JSONObject(response.toString());
-            String playerId = myResponse.getJSONArray("data")
-                    .getJSONObject(0)
-                    .getString("id");
-            JSONArray matchData = myResponse.getJSONArray("data")
-                    .getJSONObject(0)
-                    .getJSONObject("relationships")
-                    .getJSONObject("matches")
-                    .getJSONArray("data");
-            //System.out.println(matchData.toString());
-
-            String[] matchIDArray = new String[matchData.length()];
-            JSONObject match;
-            try{
-                match = matchData.getJSONObject(0);
-            }catch(JSONException e) {
-                return;
-            }
-            //matchIDArray[i] = temp2.getString("id");
-            // System.out.println(matchIDArray[i]);
-
-            // begin finding matches
-            try{
-                URL url = new URL("https://api.playbattlegrounds.com/shards/pc-na/matches/" + match.getString("id"));
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Authorization", Reference.PUBGAPIKEY);
-                conn.setRequestProperty("Accept", "application/vnd.api+json");
-                in = conn.getInputStream();
-            }catch(IOException e){
-                event.getChannel().sendMessage("You do not have any recent matches.").queue();
-                return;
-            }
-            try{
-                response = JSONReader.toStringBuffer(in);
-            }catch(IOException e){
-                return;
-            }
-            conn.disconnect();
-            //System.out.println(response.toString());
-            myResponse = new JSONObject(response.toString());
-            //JSONObject data = myResponse.getJSONObject("data");
-            JSONObject attributes = myResponse.getJSONObject("data").getJSONObject("attributes");
-            //JSONObject relationships = myResponse.getJSONObject("data").getJSONObject("relationships");
-            JSONArray included = myResponse.getJSONArray("included");
-
-            JSONObject player = null;
-            for(int j = 0; j < included.length(); j++) {
-                player = myResponse.getJSONArray("included").getJSONObject(j);
-                String test = "";
-                try{
-                    test = player.getJSONObject("attributes").getJSONObject("stats")
-                            .getString("playerId");
-                    // compare playerIds
-                    if(test.equals(playerId)){
-                        break;
-                    }
-                }catch(JSONException e){
-
-                }
-            }
-            JSONObject stats = player.getJSONObject("attributes").getJSONObject("stats");
-            //System.out.println("PLAYER FOUND");
-            //System.out.println(player.toString());
-            EmbedBuilder eb = new EmbedBuilder();
-
-            int duration = attributes.getInt("duration");
-            duration /= 60;
-            String createdAt = attributes.getString("createdAt");
-            String gameMode = attributes.getString("gameMode");
-            //System.out.println(duration + " " + createdAt + " " + gameMode);
-            int timeSurvived = stats.getInt("timeSurvived") / 60;
-
-            eb.setAuthor(user + "'s Latest PUBG Match");
-            eb.setDescription("Kills: " + stats.getInt("kills") + "\n"
-                    + "Headshot Kills: " + stats.getInt("headshotKills") + "\n"
-                    + "Assists: " + stats.getInt("assists") + "\n"
-                    + "Damage Dealt: " + stats.getDouble("damageDealt") + "\n"
-                    + "Revives: " + stats.getInt("revives") + "\n"
-                    + "Time Survived: " + timeSurvived + " minutes \n"
-                    + "Cause of Death: " + stats.getString("deathType") + "\n");
-            eb.setFooter("PUBG | Match Duration: " + duration + " minutes", null);
-            eb.setColor(Color.ORANGE);
-            event.getChannel().sendMessage(eb.build()).queue();
-
-        }
-
-        // Add !newtopic command to change topic of text channel (limit this to Mods)
-        /*
-        else if(command[0].equalsIgnoreCase("!newtopic")){
-            Role admin = event.getGuild().getRolesByName("Admin", true).get(0);
-            if(event.getMember().getRoles().contains(admin)){
-                event.getChannel().sendMessage("Today's topic on **" + event.getChannel().getName()
-                        + "** -> " );
-            }
-        }
-        */
 
     }// end of commands
 

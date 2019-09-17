@@ -4,24 +4,20 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.entities.Role;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 
 public class PMListener extends ListenerAdapter{
 
-    public void onPrivateMessageReceived(PrivateMessageReceivedEvent event) {
+    public void onPrivateMessageReceived(@Nonnull PrivateMessageReceivedEvent event) {
 
         // save Message content
         String message = event.getMessage().getContentRaw();
 
         if(message.equalsIgnoreCase("ping")) {
             event.getChannel().sendMessage("pong").queue();
-            return;
         }
-		/*
-		else if(message.equalsIgnoreCase("!confirm")) {
-			event.getChannel().sendMessage("You are about to confirm a role in the server. Please input a valid Rutgers email.").queue();
-		}
-		*/
 
         else if(message.contains("!initroles")){
             if(!event.getJDA().getGuildById(Reference.PRIVATEGUILDID).getOwner().getUser().equals(event.getAuthor())){
@@ -38,7 +34,6 @@ public class PMListener extends ListenerAdapter{
             String roleName = message.substring(index + 1);
             Reference.COMPROLES.add(roleName);
             event.getChannel().sendMessage("Success").queue();
-            return;
         }
 
         else if(message.contains("!print")){
@@ -50,22 +45,6 @@ public class PMListener extends ListenerAdapter{
                 return;
             }
             event.getChannel().sendMessage(Reference.COMPROLES.toString()).queue();
-        }
-
-        else if(message.equals("!color")){
-            List<Role> roles = event.getJDA().getGuildById(Reference.PUBLICGUILDID).getRoles();
-            String output = "";
-            for(int i = 0; i < roles.size(); i++){
-                if(roles.get(i).getName().equals("@everyone")){
-                    continue;
-                }
-                else if(roles.get(i).getColor() == null){
-                    continue;
-                }
-                output = output + roles.get(i).getName() + " " + roles.get(i).getColor().getRed()
-                        + " " + roles.get(i).getColor().getGreen() + " " + roles.get(i).getColor().getBlue() + "\n";
-            }
-            event.getChannel().sendMessage(output).queue();
         }
 
         /*
