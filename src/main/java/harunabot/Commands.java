@@ -426,14 +426,14 @@ public class Commands extends ListenerAdapter{
                 event.getChannel().sendMessage("https://osu.ppy.sh").queue();
             }
             if(command.length > 1) {
-                if(command[1].equalsIgnoreCase("-help")) {
+                if (command[1].equalsIgnoreCase("-help")) {
                     event.getChannel().sendMessage("Command flags to use after **!osu**: -topscores -recent").queue();
                 }
                 // Top Scores
-                else if(command[1].equalsIgnoreCase("-topscores")) {
+                else if (command[1].equalsIgnoreCase("-topscores")) {
                     JSONArray json = null;
                     String user = "";
-                    if(command.length < 3) {
+                    if (command.length < 3) {
                         return;
                     }
                     user = command[2];
@@ -444,12 +444,12 @@ public class Commands extends ListenerAdapter{
                     InputStream in = null;
                     HttpURLConnection conn = null;
                     StringBuffer response = null;
-                    try{
+                    try {
                         String site = "https://osu.ppy.sh/api/get_user_best?k=" + Reference.OSUAPIKEY + "&u=" + user + "&limit=5&type=string";
                         conn = JSONReader.connect(site, Reference.OSUAPIKEY);
                         in = conn.getInputStream();
                         response = JSONReader.toStringBuffer(in);
-                    }catch(IOException e){
+                    } catch (IOException e) {
                         event.getChannel().sendMessage("RIP").queue();
                         return;
                     }
@@ -465,14 +465,14 @@ public class Commands extends ListenerAdapter{
                     String mapData = "";
 
                     // iterates through each beatmap to get it's metadata
-                    for(int i = 0; i < userBestResponse.length(); i++) {
+                    for (int i = 0; i < userBestResponse.length(); i++) {
                         String score = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY + "&b="
                                 + userBestResponse.getJSONObject(i).getInt("beatmap_id") + "&type=string";
-                        try{
+                        try {
                             conn = JSONReader.connect(score, Reference.OSUAPIKEY);
                             in = conn.getInputStream();
                             response = JSONReader.toStringBuffer(in);
-                        }catch(IOException e){
+                        } catch (IOException e) {
                             event.getChannel().sendMessage("RIP").queue();
                             return;
                         }
@@ -502,11 +502,10 @@ public class Commands extends ListenerAdapter{
                     event.getChannel().sendMessage(eb.build()).queue();
                 }
                 // Recent Plays
-                else if(command[1].equalsIgnoreCase("-recent")) {
-                    // TODO: COMPLETE RECENT PLAYS
+                else if (command[1].equalsIgnoreCase("-recent")) {
                     JSONArray json = null;
                     String user = "";
-                    if(command.length < 3) {
+                    if (command.length < 3) {
                         return;
                     }
                     user = command[2];
@@ -517,50 +516,83 @@ public class Commands extends ListenerAdapter{
                     InputStream in = null;
                     HttpURLConnection conn = null;
                     StringBuffer response = null;
-                    try{
-                        String site = "https://osu.ppy.sh/api/get_user_recent?k=" + Reference.OSUAPIKEY + "&u=" + user + "&limit=5&type=string";
+                    try {
+                        String site = "https://osu.ppy.sh/api/get_user_recent?k=" + Reference.OSUAPIKEY + "&u=" + user + "&limit=1&type=string";
                         conn = JSONReader.connect(site, Reference.OSUAPIKEY);
                         in = conn.getInputStream();
                         response = JSONReader.toStringBuffer(in);
-                    }catch(IOException e){
-                        event.getChannel().sendMessage("RIP").queue();
+                    } catch (IOException e) {
                         return;
                     }
                     conn.disconnect();
 
                     JSONArray userRecentResponse = new JSONArray(response.toString());
                     // if there are no recent scores
-                    if(userRecentResponse.isEmpty()) {
-                        event.getChannel().sendMessage(user + "did not set any scores within the past 24 hours.").queue();
+                    if (userRecentResponse.isEmpty()) {
+                        event.getChannel().sendMessage(user + " did not set any scores within the past 24 hours.").queue();
+                        return;
                     }
                     int userId = userRecentResponse.getJSONObject(0).getInt("user_id");
                     JSONObject data = null;
                     String mapData = "";
 
-                    for(int i = 0; i < userRecentResponse.length(); i++) {
-                        String score = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY + "&b="
-                                + userRecentResponse.getJSONObject(i).getInt("beatmap_id") + "&type=string";
-                        try{
-                            conn = JSONReader.connect(score, Reference.OSUAPIKEY);
-                            in = conn.getInputStream();
-                            response = JSONReader.toStringBuffer(in);
-                        }catch(IOException e){
-                            event.getChannel().sendMessage("RIP").queue();
-                            return;
-                        }
-                        conn.disconnect();
-
-                        //Read JSON response and print
-                        JSONArray beatmapMetadataResponse = new JSONArray(response.toString());
-                        data = beatmapMetadataResponse.getJSONObject(0);
-
-                        //System.out.println(data.toString());
-                        int modCode = userRecentResponse.getJSONObject(i).getInt("enabled_mods");
-                        String mods = osuModReader(modCode);
-                        mapData += "\n" + data.getString("artist") + " - " + data.getString("title") + " [" + data.getString("version") + "]"
-                                + " by " + data.getString("creator") + "\n"
-                                + "Mods: " + mods + "\t" + "Rank: " + userRecentResponse.getJSONObject(i).getString("rank") + "\n";
+                    String scoreData = "https://osu.ppy.sh/api/get_scores?k=" + Reference.OSUAPIKEY + "&b="
+                            + userRecentResponse.getJSONObject(0).getInt("beatmap_id")
+                            + "&u=" + user + "&type=string";
+                    try {
+                        conn = JSONReader.connect(scoreData, Reference.OSUAPIKEY);
+                        in = conn.getInputStream();
+                        response = JSONReader.toStringBuffer(in);
+                    } catch(IOException e) {
+                        return;
                     }
+                    conn.disconnect();
+
+                    String ppAmount = "";
+                    try {
+                        JSONArray scoreDataResponse = new JSONArray(response.toString());
+                        //System.out.println(response.toString());
+                        for(int i = 0; i < scoreDataResponse.length(); i++) {
+                            if(scoreDataResponse.getJSONObject(i).getInt("score") == userRecentResponse.getJSONObject(0).getInt("score")) {
+                                ppAmount = String.format("%,.2f", scoreDataResponse.getJSONObject(i).getFloat("pp"));
+                                break;
+                            }
+                        }
+                    }catch(JSONException e) {
+                        // TODO: What if pp does not exist???
+                    }
+
+                    String beatmapData = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY + "&b="
+                            + userRecentResponse.getJSONObject(0).getInt("beatmap_id") + "&type=string";
+                    try {
+                        conn = JSONReader.connect(beatmapData, Reference.OSUAPIKEY);
+                        in = conn.getInputStream();
+                        response = JSONReader.toStringBuffer(in);
+                    } catch (IOException e) {
+                        return;
+                    }
+                    conn.disconnect();
+
+                    //Read JSON response and print
+                    JSONArray beatmapMetadataResponse = new JSONArray(response.toString());
+                    data = beatmapMetadataResponse.getJSONObject(0);
+
+                    //System.out.println(data.toString());
+                    int modCode = userRecentResponse.getJSONObject(0).getInt("enabled_mods");
+                    String mods = osuModReader(modCode);
+                    mapData = "[" + data.getString("artist") + " - " + data.getString("title") + "](https://osu.ppy.sh/beatmapsets/" + data.getString("beatmapset_id") + "#osu/" + data.getString("beatmap_id")
+                            + ") [" + data.getString("version") + "]" + " by " + data.getString("creator") + "\n";
+                    if(!ppAmount.isEmpty()) {
+                        mapData += "**" + ppAmount + "pp**\n";
+                    }
+                    mapData += "\n**Score:** " + String.format("%,d", userRecentResponse.getJSONObject(0).getInt("score"))
+                            + "\t(" + userRecentResponse.getJSONObject(0).getInt("maxcombo") + "/" + data.getInt("max_combo") + "x)"
+                            + "\n**300s:** " + userRecentResponse.getJSONObject(0).getInt("count300")
+                            + "\t**100s:** " + userRecentResponse.getJSONObject(0).getInt("count100")
+                            + "\t**50s:** " + userRecentResponse.getJSONObject(0).getInt("count50")
+                            + "\t**Misses:** " + userRecentResponse.getJSONObject(0).getInt("countmiss") + "\n"
+                            + "**Mods:** " + mods + "\t**Rank:** " + userRecentResponse.getJSONObject(0).getString("rank") + "\n"
+                            + "**Date:** " + userRecentResponse.getJSONObject(0).getString("date") + " UTC";
 
                     EmbedBuilder eb = new EmbedBuilder();
                     eb.setAuthor(user, "https://osu.ppy.sh/users/" + userId, "https://a.ppy.sh/" + userId);

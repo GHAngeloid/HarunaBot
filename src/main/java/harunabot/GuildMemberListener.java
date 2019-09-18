@@ -1,9 +1,11 @@
 package harunabot;
 
 import java.awt.Color;
-import java.io.IOException;
+import java.io.*;
+import java.sql.SQLData;
 import java.util.List;
 
+import jdk.jfr.events.FileWriteEvent;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.channel.text.update.TextChannelUpdatePermissionsEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent;
@@ -13,6 +15,8 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveAllEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent;
+import net.dv8tion.jda.api.events.user.UserActivityEndEvent;
+import net.dv8tion.jda.api.events.user.UserActivityStartEvent;
 import net.dv8tion.jda.api.events.user.update.UserUpdateActivityOrderEvent;
 import net.dv8tion.jda.api.exceptions.HierarchyException;
 import org.json.JSONArray;
@@ -36,8 +40,7 @@ public class GuildMemberListener extends ListenerAdapter {
         event.getGuild().addRoleToMember(event.getMember(),role).queue();
         PrivateChannel privateChannel = event.getUser().openPrivateChannel().complete();
         privateChannel.sendMessage("Welcome to " + event.getGuild().getName() + "!\n\n" +
-                "Check `#welcome` for official rules of this server and add your roles in `#botcommands` using the `!addrole` command.\n\n" +
-                "Thank you!").queue();
+                "Check `#welcome` for official rules of this server. Have fun!").queue();
 
     }
 
@@ -57,6 +60,7 @@ public class GuildMemberListener extends ListenerAdapter {
     }
 
     // Still needs big fixes!
+    /*
     public void onUserUpdateActivityOrder(@Nonnull UserUpdateActivityOrderEvent event){
 
         //EmbedBuilder eb = new EmbedBuilder();
@@ -93,6 +97,31 @@ public class GuildMemberListener extends ListenerAdapter {
         }
 
     }
+    */
+
+
+    public void onUserActivityStart(@Nonnull UserActivityStartEvent event) {
+
+        if(event.getNewActivity().getType().getKey() == 1) {
+            Member member = event.getMember();
+            Role role = event.getGuild().getRolesByName("LIVE", true).get(0);
+            event.getGuild().addRoleToMember(member, role).queue();
+            System.out.println(member.getEffectiveName() + " is LIVE");
+        }
+
+    }
+
+
+    public void onUserActivityEnd(@Nonnull UserActivityEndEvent event) {
+
+        if(event.getOldActivity().getType().getKey() == 1) {
+            Member member = event.getMember();
+            Role role = event.getGuild().getRolesByName("LIVE", true).get(0);
+            event.getGuild().removeRoleFromMember(member, role).queue();
+            System.out.println(member.getEffectiveName() + " is not LIVE");
+        }
+
+    }
 
 
     public void onTextChannelUpdatePermissions(@Nonnull TextChannelUpdatePermissionsEvent event){
@@ -100,30 +129,49 @@ public class GuildMemberListener extends ListenerAdapter {
     }
 
 
+    /*
     public void onGuildMessageReceived(@Nonnull GuildMessageReceivedEvent event) {
         System.out.println("RECEIVED " + event.getAuthor().getName() + "\n"
             + event.getChannel().getName() + "\n"
             + event.getMessage().getContentRaw() + "\n"
             + event.getMessageId());
+
+        // writing into a file example
+        try {
+            FileWriter f = new FileWriter("test");
+            f.write("WTF");
+            f.close();
+        }
+        catch(IOException e) {
+            e.printStackTrace();
+        }
+
     }
+     */
 
     public void onGuildMessageUpdate(@Nonnull GuildMessageUpdateEvent event) {
+        /*
         System.out.println("UPDATE " + event.getAuthor().getName() + "\n"
                 + event.getChannel().getName() + "\n"
                 + event.getMessage().getContentRaw() + "\n"
                 + event.getMessageId());
+         */
     }
 
     public void onGuildMessageDelete(@Nonnull GuildMessageDeleteEvent event) {
+        /*
         System.out.println("DELETE " + event.getChannel().getName() + "\n"
                 + event.getMessageId());
+         */
 
     }
 
     public void onGuildMessageEmbed(@Nonnull GuildMessageEmbedEvent event) {
+        /*
         System.out.println("EMBED " + event.getChannel().getName() + "\n"
                 + event.getMessageEmbeds().get(0).getDescription() + "\n"
                 + event.getMessageId());
+         */
     }
 
     public void onGuildMessageReactionAdd(@Nonnull GuildMessageReactionAddEvent event) {
@@ -160,7 +208,7 @@ public class GuildMemberListener extends ListenerAdapter {
     }
 
     public void onGuildMessageReactionRemoveAll(@Nonnull GuildMessageReactionRemoveAllEvent event) {
-        System.out.println("ROLE REMOVEALL");
+        //System.out.println("ROLE REMOVEALL");
     }
 
 }
