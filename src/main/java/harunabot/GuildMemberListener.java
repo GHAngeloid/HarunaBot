@@ -60,53 +60,24 @@ public class GuildMemberListener extends ListenerAdapter {
     }
 
     // Still needs big fixes!
-    /*
     public void onUserUpdateActivityOrder(@Nonnull UserUpdateActivityOrderEvent event){
 
-        //EmbedBuilder eb = new EmbedBuilder();
-        List<Activity> activityList = event.getNewValue();
-        List<Activity> oldActivityList = event.getOldValue();
-        Member member = event.getMember();
-
-        // if User begins STREAMING
-        if(activityList.get(0) != null && activityList.get(0).getType().getKey() == 1) {
-            //eb.setColor(Color.MAGENTA);
-            //eb.setAuthor(event.getUser().getName() + " is now live!", null, event.getUser().getAvatarUrl());
-            //eb.setDescription(game.getName() + "\n" + game.getUrl());
-
-            // will have a role called LIVE
-            //Activity.ActivityType.STREAMING.getKey(); //1
-            //Activity.ActivityType.LISTENING.getKey(); //2
-            //Activity.ActivityType.DEFAULT.getKey(); //0
-            //Activity.ActivityType.WATCHING.getKey(); //3
-
-            Role role = event.getGuild().getRolesByName("LIVE", true).get(0);
-            event.getGuild().addRoleToMember(member, role).queue();
-            System.out.println(member.getEffectiveName() + " is LIVE");
-            return;
-
-        }
-        // check if User stops STREAMING
-        if(oldActivityList.get(0) == null){
-            return;
-        }
-        if(oldActivityList.get(0).getType().getKey() == 1){
-            Role role = event.getGuild().getRolesByName("LIVE", true).get(0);
-            event.getGuild().removeRoleFromMember(member, role).queue();
-            System.out.println(member.getEffectiveName() + " is not LIVE");
-        }
-
     }
-    */
 
 
     public void onUserActivityStart(@Nonnull UserActivityStartEvent event) {
+
+        // will have a role called LIVE
+        //Activity.ActivityType.STREAMING.getKey() -> 1
+        //Activity.ActivityType.LISTENING.getKey() -> 2
+        //Activity.ActivityType.DEFAULT.getKey() -> 0
+        //Activity.ActivityType.WATCHING.getKey() -> 3
 
         if(event.getNewActivity().getType().getKey() == 1) {
             Member member = event.getMember();
             Role role = event.getGuild().getRolesByName("LIVE", true).get(0);
             event.getGuild().addRoleToMember(member, role).queue();
-            System.out.println(member.getEffectiveName() + " is LIVE");
+            //System.out.println(member.getEffectiveName() + " is LIVE");
         }
 
     }
@@ -118,7 +89,7 @@ public class GuildMemberListener extends ListenerAdapter {
             Member member = event.getMember();
             Role role = event.getGuild().getRolesByName("LIVE", true).get(0);
             event.getGuild().removeRoleFromMember(member, role).queue();
-            System.out.println(member.getEffectiveName() + " is not LIVE");
+            //System.out.println(member.getEffectiveName() + " is not LIVE");
         }
 
     }

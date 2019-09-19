@@ -107,14 +107,23 @@ public class Commands extends ListenerAdapter{
 
         // osu! beatmap listener for info
         // CHANGE : include new URL for beatmaps for new website
-        if(command[0].startsWith("https://osu.ppy.sh/b/") || command[0].startsWith("https://osu.ppy.sh/s/")) {
+        if(command[0].startsWith("https://osu.ppy.sh/b/") || command[0].startsWith("https://osu.ppy.sh/s/")
+            || command[0].startsWith("https://osu.ppy.sh/beatmapsets/")) {
             JSONObject data = null;
             String beatmapId = "";
 
             if(command[0].charAt(19) == 's') {
                 beatmapId = "&s=" + command[0].substring(21);
-            }else {
+            }else if(command[0].charAt(19) == 'b' && command[0].charAt(20) == '/') {
                 beatmapId = "&b=" + command[0].substring(21);
+            }else {
+                int index = command[0].indexOf("#osu/");
+                // not osu! standard
+                if(index == -1) {
+                    return;
+                }
+                index += 5;
+                beatmapId = "&b=" + command[0].substring(index);
             }
 
             //beatmapId = command[0].substring(21);
@@ -146,33 +155,8 @@ public class Commands extends ListenerAdapter{
             int minutes = mapLength / 60;
             int seconds = mapLength % 60;
 
-            int statusCode = data.getInt("approved");
-            String status = "";
-            switch(statusCode) {
-                case 4:
-                    status = "Loved";
-                    break;
-                case 3:
-                    status = "Qualified";
-                    break;
-                case 2:
-                    status = "Approved";
-                    break;
-                case 1:
-                    status = "Ranked";
-                    break;
-                case 0:
-                    status = "Pending";
-                    break;
-                case -1:
-                    status = "WIP";
-                    break;
-                case -2:
-                    status = "Graveyard";
-                    break;
-                default:
-                    status = "ERROR";
-            }
+            String status = osuApprovedReader(data.getInt("approved"));
+
             String output = "**Song:** " + data.getString("title") + "\n"
                     + "**Artist:** " + data.getString("artist") + "\n"
                     + "**Diff Name:** " + data.getString("version") + "\n"
@@ -258,10 +242,10 @@ public class Commands extends ListenerAdapter{
         }
 
 
-        // help
-        else if(command[0].equalsIgnoreCase("!help")){
+        // commands
+        else if(command[0].equalsIgnoreCase("!commands")){
             String output = "**List of commands:**\n!ping\n!roll\n!emotes\n!role\n"
-                    + "!server\n!love\n!osu\n!game";
+                    + "!server\n!love\n!osu\n!activity";
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
             eb.setDescription(output);
@@ -378,44 +362,43 @@ public class Commands extends ListenerAdapter{
 
 
         else if(command[0].equalsIgnoreCase("!role")) {
-            // Assuming first time User of command
-            if(command.length > 1) {
-                if(command[1].equalsIgnoreCase("-help")) {
-                    event.getChannel().sendMessage("Command flags to use after **!role**: -list -info").queue();
-                }
-                // Replaces !rolelist command
-                else if(command[1].equalsIgnoreCase("-list")) {
-                    String output = "**List of available roles:**\n";
-                    // Display roles that are allowed. Make it Permission sensitive!
-                    Role role;
-                    boolean isAllowed = true;
-                    for(int i = 0; i < event.getGuild().getRoles().size(); i++){
-                        role = event.getGuild().getRoles().get(i);
-                        if(role.getName().equals("@everyone") || role.getName().equals("LIVE")) {
-                            continue;
-                        }
+            if(command.length == 1) {
+                event.getChannel().sendMessage("Role Commands. Command flags to use after **!role**: -list -info").queue();
+                return;
+            }
 
-                        if(role.getPermissions().contains(Permission.ADMINISTRATOR)
-                                || role.getPermissions().contains(Permission.KICK_MEMBERS)
-                                || role.getPermissions().contains(Permission.BAN_MEMBERS)
-                                || role.isManaged()) {
-                            isAllowed = false;
-                        }
-                        if(isAllowed) {
-                            output += role.getName() + "\n";
-                        }else{
-                            isAllowed = true;
-                        }
+            // Replaces !rolelist command
+            if(command[1].equalsIgnoreCase("-list")) {
+                String output = "**List of available roles:**\n";
+                // Display roles that are allowed. Make it Permission sensitive!
+                Role role;
+                boolean isAllowed = true;
+                for(int i = 0; i < event.getGuild().getRoles().size(); i++){
+                    role = event.getGuild().getRoles().get(i);
+                    if(role.getName().equals("@everyone") || role.getName().equals("LIVE")) {
+                        continue;
                     }
-                    EmbedBuilder eb = new EmbedBuilder();
-                    eb.setColor(Color.ORANGE);
-                    eb.setDescription(output);
-                    event.getChannel().sendMessage(eb.build()).queue();
+
+                    if(role.getPermissions().contains(Permission.ADMINISTRATOR)
+                            || role.getPermissions().contains(Permission.KICK_MEMBERS)
+                            || role.getPermissions().contains(Permission.BAN_MEMBERS)
+                            || role.isManaged()) {
+                        isAllowed = false;
+                    }
+                    if(isAllowed) {
+                        output += role.getName() + "\n";
+                    }else{
+                        isAllowed = true;
+                    }
                 }
-                // Where to get roles?
-                else if(command[1].equalsIgnoreCase("-info")) {
-                    event.getChannel().sendMessage("Assignable roles can be found in **#roles**.").queue();
-                }
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setColor(Color.ORANGE);
+                eb.setDescription(output);
+                event.getChannel().sendMessage(eb.build()).queue();
+            }
+            // Where to get roles?
+            else if(command[1].equalsIgnoreCase("-info")) {
+                event.getChannel().sendMessage("Assignable roles can be found in **#roles**.").queue();
             }
         }
 
@@ -423,17 +406,15 @@ public class Commands extends ListenerAdapter{
         // osu
         else if(command[0].equalsIgnoreCase("!osu")) {
             if(command.length == 1) {
-                event.getChannel().sendMessage("https://osu.ppy.sh").queue();
+                event.getChannel().sendMessage("osu! Commands. Flags to use after **!osu**: -top -recent -maps").queue();
             }
             if(command.length > 1) {
-                if (command[1].equalsIgnoreCase("-help")) {
-                    event.getChannel().sendMessage("Command flags to use after **!osu**: -topscores -recent").queue();
-                }
                 // Top Scores
-                else if (command[1].equalsIgnoreCase("-topscores")) {
+                if (command[1].equalsIgnoreCase("-top")) {
                     JSONArray json = null;
                     String user = "";
                     if (command.length < 3) {
+                        event.getChannel().sendMessage("Retrieve an osu! player's top scores. (i.e. !osu -top <Username>)").queue();
                         return;
                     }
                     user = command[2];
@@ -461,7 +442,7 @@ public class Commands extends ListenerAdapter{
                     JSONArray userBestResponse = new JSONArray(response.toString());
                     int userId = userBestResponse.getJSONObject(0).getInt("user_id");
                     JSONObject data = null;
-                    String title = user + "'s Top Scores";
+                    String title = user;
                     String mapData = "";
 
                     // iterates through each beatmap to get it's metadata
@@ -487,10 +468,13 @@ public class Commands extends ListenerAdapter{
                         //System.out.println(data.toString());
                         int modCode = userBestResponse.getJSONObject(i).getInt("enabled_mods");
                         String mods = osuModReader(modCode);
-                        mapData += "\n" + data.getString("artist") + " - " + data.getString("title") + " [" + data.getString("version") + "]"
-                                + " by " + data.getString("creator") + "\n"
-                                + String.format("%.2f", userBestResponse.getJSONObject(i).getDouble("pp")) + "pp\n"
-                                + "Mods: " + mods + "\t" + "Rank: " + userBestResponse.getJSONObject(i).getString("rank") + "\n";
+                        mapData += "\n[" + data.getString("artist") + " - " + data.getString("title")
+                                + "](https://osu.ppy.sh/beatmapsets/" + data.getString("beatmapset_id") + "#osu/" + data.getString("beatmap_id") + ") ["
+                                + data.getString("version") + "]"
+                                + " by [" + data.getString("creator") + "](https://osu.ppy.sh/users/" + data.getInt("creator_id") +")\n**"
+                                + String.format("%.2f", userBestResponse.getJSONObject(i).getDouble("pp")) + "pp**\n"
+                                + "**Mods:** " + mods + "\t" + "**Rank:** " + userBestResponse.getJSONObject(i).getString("rank") + "\n"
+                                + "**Date:** " + userBestResponse.getJSONObject(i).getString("date") + " UTC\n";
                     }
                     //https://osu.ppy.sh/images/badges/score-ranks/Score-SS-Small-60@2x.png
 
@@ -498,26 +482,29 @@ public class Commands extends ListenerAdapter{
                     eb.setAuthor(title, "https://osu.ppy.sh/users/" + userId, "https://a.ppy.sh/" + userId);
                     eb.setColor(Color.ORANGE);
                     eb.setDescription(mapData);
-                    eb.setFooter("osu!", "https://osu.ppy.sh/images/layout/osu-logo@2x.png");
+                    eb.setFooter("osu! | Top Scores", "https://osu.ppy.sh/images/layout/osu-logo@2x.png");
                     event.getChannel().sendMessage(eb.build()).queue();
                 }
                 // Recent Plays
                 else if (command[1].equalsIgnoreCase("-recent")) {
-                    JSONArray json = null;
                     String user = "";
                     if (command.length < 3) {
+                        event.getChannel().sendMessage("Retrieve an osu! player's recent score. (i.e. !osu -recent <Username>)").queue();
                         return;
                     }
+
+                    // get username
                     user = command[2];
                     for (int i = 3; i < command.length; i++) {
                         user += " " + command[i];
                     }
 
+                    // establish connection for user recent scores
                     InputStream in = null;
                     HttpURLConnection conn = null;
                     StringBuffer response = null;
                     try {
-                        String site = "https://osu.ppy.sh/api/get_user_recent?k=" + Reference.OSUAPIKEY + "&u=" + user + "&limit=1&type=string";
+                        String site = "https://osu.ppy.sh/api/get_user_recent?k=" + Reference.OSUAPIKEY + "&u=" + user + "&limit=50&type=string";
                         conn = JSONReader.connect(site, Reference.OSUAPIKEY);
                         in = conn.getInputStream();
                         response = JSONReader.toStringBuffer(in);
@@ -527,17 +514,34 @@ public class Commands extends ListenerAdapter{
                     conn.disconnect();
 
                     JSONArray userRecentResponse = new JSONArray(response.toString());
+                    //System.out.println(response.toString());
+
                     // if there are no recent scores
                     if (userRecentResponse.isEmpty()) {
                         event.getChannel().sendMessage(user + " did not set any scores within the past 24 hours.").queue();
                         return;
                     }
                     int userId = userRecentResponse.getJSONObject(0).getInt("user_id");
+
+                    // check for a passed score, ignore failed
+                    int recentPlayIndex = -1;
+                    for(int i = 0; i < userRecentResponse.length(); i++) {
+                        if(userRecentResponse.getJSONObject(i).getString("rank").charAt(0) != 'F') {
+                            recentPlayIndex = i;
+                            break;
+                        }
+                    }
+                    if(recentPlayIndex == -1) {
+                        event.getChannel().sendMessage(user + " did not set any scores within the past 24 hours.").queue();
+                        return;
+                    }
+
                     JSONObject data = null;
                     String mapData = "";
 
+                    // score data
                     String scoreData = "https://osu.ppy.sh/api/get_scores?k=" + Reference.OSUAPIKEY + "&b="
-                            + userRecentResponse.getJSONObject(0).getInt("beatmap_id")
+                            + userRecentResponse.getJSONObject(recentPlayIndex).getInt("beatmap_id")
                             + "&u=" + user + "&type=string";
                     try {
                         conn = JSONReader.connect(scoreData, Reference.OSUAPIKEY);
@@ -553,7 +557,7 @@ public class Commands extends ListenerAdapter{
                         JSONArray scoreDataResponse = new JSONArray(response.toString());
                         //System.out.println(response.toString());
                         for(int i = 0; i < scoreDataResponse.length(); i++) {
-                            if(scoreDataResponse.getJSONObject(i).getInt("score") == userRecentResponse.getJSONObject(0).getInt("score")) {
+                            if(scoreDataResponse.getJSONObject(i).getInt("score") == userRecentResponse.getJSONObject(recentPlayIndex).getInt("score")) {
                                 ppAmount = String.format("%,.2f", scoreDataResponse.getJSONObject(i).getFloat("pp"));
                                 break;
                             }
@@ -562,8 +566,9 @@ public class Commands extends ListenerAdapter{
                         // TODO: What if pp does not exist???
                     }
 
+                    // beatmap metadata
                     String beatmapData = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY + "&b="
-                            + userRecentResponse.getJSONObject(0).getInt("beatmap_id") + "&type=string";
+                            + userRecentResponse.getJSONObject(recentPlayIndex).getInt("beatmap_id") + "&type=string";
                     try {
                         conn = JSONReader.connect(beatmapData, Reference.OSUAPIKEY);
                         in = conn.getInputStream();
@@ -578,29 +583,162 @@ public class Commands extends ListenerAdapter{
                     data = beatmapMetadataResponse.getJSONObject(0);
 
                     //System.out.println(data.toString());
-                    int modCode = userRecentResponse.getJSONObject(0).getInt("enabled_mods");
+                    int modCode = userRecentResponse.getJSONObject(recentPlayIndex).getInt("enabled_mods");
                     String mods = osuModReader(modCode);
                     mapData = "[" + data.getString("artist") + " - " + data.getString("title") + "](https://osu.ppy.sh/beatmapsets/" + data.getString("beatmapset_id") + "#osu/" + data.getString("beatmap_id")
-                            + ") [" + data.getString("version") + "]" + " by " + data.getString("creator") + "\n";
+                            + ") [" + data.getString("version") + "]" + " by [" + data.getString("creator") + "](https://osu.ppy.sh/users/" + data.getString("creator_id") + ")\n";
                     if(!ppAmount.isEmpty()) {
                         mapData += "**" + ppAmount + "pp**\n";
                     }
-                    mapData += "\n**Score:** " + String.format("%,d", userRecentResponse.getJSONObject(0).getInt("score"))
-                            + "\t(" + userRecentResponse.getJSONObject(0).getInt("maxcombo") + "/" + data.getInt("max_combo") + "x)"
-                            + "\n**300s:** " + userRecentResponse.getJSONObject(0).getInt("count300")
-                            + "\t**100s:** " + userRecentResponse.getJSONObject(0).getInt("count100")
-                            + "\t**50s:** " + userRecentResponse.getJSONObject(0).getInt("count50")
-                            + "\t**Misses:** " + userRecentResponse.getJSONObject(0).getInt("countmiss") + "\n"
-                            + "**Mods:** " + mods + "\t**Rank:** " + userRecentResponse.getJSONObject(0).getString("rank") + "\n"
-                            + "**Date:** " + userRecentResponse.getJSONObject(0).getString("date") + " UTC";
+                    mapData += "\n**Score:** " + String.format("%,d", userRecentResponse.getJSONObject(recentPlayIndex).getInt("score"))
+                            + "\t(" + userRecentResponse.getJSONObject(recentPlayIndex).getInt("maxcombo") + "/" + data.getInt("max_combo") + "x)"
+                            + "\n**300s:** " + userRecentResponse.getJSONObject(recentPlayIndex).getInt("count300")
+                            + "\t**100s:** " + userRecentResponse.getJSONObject(recentPlayIndex).getInt("count100")
+                            + "\t**50s:** " + userRecentResponse.getJSONObject(recentPlayIndex).getInt("count50")
+                            + "\t**Misses:** " + userRecentResponse.getJSONObject(recentPlayIndex).getInt("countmiss") + "\n"
+                            + "**Mods:** " + mods + "\t**Rank:** " + userRecentResponse.getJSONObject(recentPlayIndex).getString("rank") + "\n"
+                            + "**Date:** " + userRecentResponse.getJSONObject(recentPlayIndex).getString("date") + " UTC";
 
                     EmbedBuilder eb = new EmbedBuilder();
                     eb.setAuthor(user, "https://osu.ppy.sh/users/" + userId, "https://a.ppy.sh/" + userId);
                     eb.setColor(Color.ORANGE);
                     eb.setDescription(mapData);
-                    eb.setFooter("osu!", "https://osu.ppy.sh/images/layout/osu-logo@2x.png");
+                    eb.setFooter("osu! | Recent Play", "https://osu.ppy.sh/images/layout/osu-logo@2x.png");
                     event.getChannel().sendMessage(eb.build()).queue();
 
+                }
+                // beatmap commands
+                else if(command[1].equalsIgnoreCase("-maps")) {
+                    if(command.length == 2) {
+                        event.getChannel().sendMessage("osu! Beatmap Commands. Flags to use after **-maps**: -from -since").queue();
+                        return;
+                    }
+                    // -from : Random beatmap from specified User
+                    if(command[2].equalsIgnoreCase("-from")) {
+                        if(command.length == 3) {
+                            event.getChannel().sendMessage("Retrieve random beatmap from specified User. (i.e. !osu -maps -from <Username>)").queue();
+                            return;
+                        }
+                        // collect User
+                        String user = "";
+                        user = command[3];
+                        for (int i = 4; i < command.length; i++) {
+                            user += " " + command[i];
+                        }
+
+                        InputStream in = null;
+                        HttpURLConnection conn = null;
+                        StringBuffer response = null;
+                        try {
+                            String site = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY + "&u=" + user + "&m=0&type=string";
+                            conn = JSONReader.connect(site, Reference.OSUAPIKEY);
+                            in = conn.getInputStream();
+                            response = JSONReader.toStringBuffer(in);
+                        } catch (IOException e) {
+                            return;
+                        }
+                        conn.disconnect();
+
+                        JSONArray beatmapResponse = new JSONArray(response.toString());
+                        //System.out.println(response.toString());
+                        if(beatmapResponse.isEmpty()) {
+                            return;
+                        }
+
+                        // select a beatmap to parse metadata
+                        Random rd = new Random();
+                        int indexOfMap = rd.nextInt(beatmapResponse.length());
+                        JSONObject specifiedMap = beatmapResponse.getJSONObject(indexOfMap);
+
+                        // translate beatmap status
+                        String status = osuApprovedReader(specifiedMap.getInt("approved"));
+
+                        // find length
+                        int minutes = specifiedMap.getInt("total_length") / 60;
+                        int seconds = specifiedMap.getInt("total_length") % 60;
+
+                        // parse metadata
+                        String mapData = "";
+                        mapData = "[" + specifiedMap.getString("artist") + " - " + specifiedMap.getString("title")
+                                + "](https://osu.ppy.sh/beatmapsets/" + specifiedMap.getString("beatmapset_id") + ")\n"
+                                + "**Length:** " + String.format("%d:%02d", minutes, seconds)
+                                + "\t**BPM:** " + specifiedMap.getInt("bpm") + "\n"
+                                + "**Status:** " + status;
+
+                        EmbedBuilder eb = new EmbedBuilder();
+                        eb.setAuthor(user, "https://osu.ppy.sh/users/" + specifiedMap.getInt("creator_id"), "https://a.ppy.sh/" + specifiedMap.getInt("creator_id"));
+                        eb.setColor(Color.ORANGE);
+                        eb.setDescription(mapData);
+                        eb.setFooter("osu!", "https://osu.ppy.sh/images/layout/osu-logo@2x.png");
+                        event.getChannel().sendMessage(eb.build()).queue();
+                        // TODO: Future expansion, specify "approved" status (i.e. Ranked, Loved, etc.)
+                    }
+                    else if(command[2].equalsIgnoreCase("-since")) {
+                        if(command.length == 3) {
+                            event.getChannel().sendMessage("Retrieve beatmaps from specified date. (i.e. !osu -maps -since <MM/DD/YY>)").queue();
+                            return;
+                        }
+
+                        // date is incorrect
+                        if(command[3].length() != 8) {
+                            return;
+                        }
+
+                        // Example SQL Date : 2013-01-01 00:00:00
+                        String sqlFormattedDate = "20" + command[3].substring(6) + "-" + command[3].substring(0, 2)
+                                + "-" + command[3].substring(3, 5) + "%2000:00:00";
+                        //System.out.println(sqlFormattedDate);
+
+                        // make connection to get beatmaps
+                        InputStream in = null;
+                        HttpURLConnection conn = null;
+                        StringBuffer response = null;
+                        try {
+                            String site = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY + "&since=" + sqlFormattedDate +"&limit=50&m=0&type=string";
+                            conn = JSONReader.connect(site, Reference.OSUAPIKEY);
+                            in = conn.getInputStream();
+                            response = JSONReader.toStringBuffer(in);
+                        } catch (IOException e) {
+                            return;
+                        }
+                        conn.disconnect();
+
+                        JSONArray beatmapsResponse = new JSONArray(response.toString());
+
+                        // check if date is in the future
+                        if(beatmapsResponse.isEmpty()) {
+                            event.getChannel().sendMessage("Are you from the future?").queue();
+                            return;
+                        }
+
+                        String mapData = "";
+                        boolean mapExists = false;
+                        int beatmapset = 0;
+                        for(int i = 0; i < beatmapsResponse.length(); i++) {
+                            // check if beatmapset was already recorded and the date is the same
+                            if(beatmapsResponse.getJSONObject(i).getInt("beatmapset_id") != beatmapset && beatmapsResponse.getJSONObject(i).getString("approved_date").charAt(9) == command[3].charAt(4)) {
+                                mapData += "\n[" + beatmapsResponse.getJSONObject(i).getString("artist") + " - "
+                                        + beatmapsResponse.getJSONObject(i).getString("title") + "](https://osu.ppy.sh/beatmapsets/"
+                                        + beatmapsResponse.getJSONObject(i).getString("beatmapset_id") + ") by "
+                                        + beatmapsResponse.getJSONObject(i).getString("creator") + "\n";
+                                beatmapset = beatmapsResponse.getJSONObject(i).getInt("beatmapset_id");
+                                mapExists = true;
+                            }
+
+                        }
+
+                        // test if date is from the past
+                        if(mapExists) {
+                            EmbedBuilder eb = new EmbedBuilder();
+                            eb.setAuthor("Beatmaps from " + command[3]);
+                            eb.setColor(Color.ORANGE);
+                            eb.setDescription(mapData);
+                            eb.setFooter("osu!", "https://osu.ppy.sh/images/layout/osu-logo@2x.png");
+                            event.getChannel().sendMessage(eb.build()).queue();
+                        }else {
+                            event.getChannel().sendMessage("osu! did not exist yet.").queue();
+                        }
+                    }
                 }
             }
 
@@ -632,8 +770,8 @@ public class Commands extends ListenerAdapter{
         }
 
 
-        // game
-        else if(command[0].equalsIgnoreCase("!game")) {
+        // activity (game)
+        else if(command[0].equalsIgnoreCase("!activity")) {
             String user = "";
             EmbedBuilder eb = new EmbedBuilder();
 
@@ -741,6 +879,7 @@ public class Commands extends ListenerAdapter{
 
     // List of helper methods for some of the commands
 
+
     // emotePrint
     private String emotePrint(GuildMessageReceivedEvent e){
         int emoteTotal = e.getGuild().getEmotes().size();
@@ -760,11 +899,13 @@ public class Commands extends ListenerAdapter{
         return message;
     }// constructs entire list of emotes on server as a message
 
+
     private int roll(int max){
         Random rn = new Random();
         int answer = rn.nextInt(max)+1;
         return answer;
-    }// returns a roll from 1 and n=max (ex: 1 and 100)
+    }// returns a roll from 1 and n = max (ex: 1 and 100)
+
 
     private String osuModReader(int code) {
 
@@ -823,5 +964,27 @@ public class Commands extends ListenerAdapter{
         }
         return result;
     }// end of osuModReader
+
+
+    private String osuApprovedReader(int status) {
+        switch(status) {
+            case 4:
+                return "Loved";
+            case 3:
+                return "Qualified";
+            case 2:
+                return "Approved";
+            case 1:
+                return "Ranked";
+            case 0:
+                return "Pending";
+            case -1:
+                return "WIP";
+            case -2:
+                return "Graveyard";
+            default:
+                return null;
+        }
+    }
 
 }
