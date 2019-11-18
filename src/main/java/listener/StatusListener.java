@@ -1,4 +1,4 @@
-package harunabot;
+package listener;
 
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -12,9 +12,15 @@ import net.dv8tion.jda.api.events.ShutdownEvent;
 
 import javax.annotation.Nonnull;
 
-
+/**
+ * Status Listener
+ */
 public class StatusListener extends ListenerAdapter {
 
+    /**
+     * JDA is ready.
+     * @param event ReadyEvent
+     */
     public void onReady(@Nonnull ReadyEvent event){
         for(int i = 0; i < event.getJDA().getGuilds().size(); i++) {
             System.out.printf("[+] %s (%s Members) - READY\n", event.getJDA().getGuilds().get(i).getName(),
@@ -31,6 +37,10 @@ public class StatusListener extends ListenerAdapter {
 		*/
     }
 
+    /**
+     * JDA is shutting down.
+     * @param event ShutdownEvent
+     */
     public void onShutdown(@Nonnull ShutdownEvent event){
         for(int i = 0; i < event.getJDA().getGuilds().size(); i++) {
             System.out.printf("[+] %s (%s Members) - SHUTDOWN\n", event.getJDA().getGuilds().get(i).getName(),
@@ -44,6 +54,10 @@ public class StatusListener extends ListenerAdapter {
 		*/
     }
 
+    /**
+     * JDA is disconnected.
+     * @param event DisconnectEvent
+     */
     public void onDisconnect(@Nonnull DisconnectEvent event) {
         for(int i = 0; i < event.getJDA().getGuilds().size(); i++) {
             System.out.printf("[+] %s (%s Members) - DISCONNECTED\n", event.getJDA().getGuilds().get(i).getName(),
@@ -57,6 +71,10 @@ public class StatusListener extends ListenerAdapter {
 		*/
     }
 
+    /**
+     * JDA is reconnected.
+     * @param event ReconnectedEvent
+     */
     public void onReconnect(@Nonnull ReconnectedEvent event) {
         for(int i = 0; i < event.getJDA().getGuilds().size(); i++) {
             System.out.printf("[+] %s (%s Members) - RECONNECTED\n", event.getJDA().getGuilds().get(i).getName(),

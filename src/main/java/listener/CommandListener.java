@@ -1,14 +1,14 @@
-package harunabot;
+package listener;
 
-import net.dv8tion.jda.api.MessageBuilder;
+import configuration.AppConfig;
+import jdk.nashorn.internal.runtime.JSONListAdapter;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.message.priv.GenericPrivateMessageEvent;
-import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import java.awt.Color;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Random;
 
@@ -16,7 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 //import net.dv8tion.jda.core.requests.RestAction;
-import net.dv8tion.jda.api.managers.GuildManager;
+import net.dv8tion.jda.api.utils.AttachmentOption;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,29 +25,47 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Activity.Timestamps;
 //import net.dv8tion.jda.core.entities.MessageHistory;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.exceptions.HierarchyException;
 
 import java.io.*;
 import java.net.*;
 
-public class Commands extends ListenerAdapter{
+public class CommandListener extends ListenerAdapter{
+
+    private boolean isLocked = false;
+
 
     @Override
     public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event)
     {
 
+        final String PREFIX = "PREFIX";
+        final String OSU = "OSU";
+        final String TWITCH = "TWITCH";
+
         // split Message content apart by whitespace
         String[] command = event.getMessage().getContentRaw().split(" ");
 
-        /* DEPRECATED. Reason: Infinite Prints
+        /* DEPRECATED. Reason: Each person can say the same message
         // owo listener
         if(command[0].equalsIgnoreCase("owo")){
-            event.getChannel().sendMessage(new MessageBuilder().append("owo").build()).queue();
+            if(!event.getAuthor().isBot() && !isLocked) {
+                event.getChannel().sendMessage("owo").queue();
+                try {
+                    isLocked = true;
+                    Thread.sleep(3000);
+                }
+                catch(InterruptedException e) {
+                    System.out.println("Improper sleep");
+                }
+                isLocked = false;
+                return;
+            }
+            System.out.println("Bot sent message");
         }
         */
 
-        // Check if command does not start with '!' or the website is not osu!
-        if(!command[0].startsWith(Reference.PREFIX) && !command[0].startsWith("https://osu.ppy.sh/")) {
+        // Check if command does not start with prefix or the website is not osu!
+        if(!command[0].startsWith(AppConfig.PROPERTIES.getProperty(PREFIX)) && !command[0].startsWith("https://osu.ppy.sh/")) {
             return;
         }
 
@@ -96,7 +114,7 @@ public class Commands extends ListenerAdapter{
         }
 
         // TODO: Make sure commands stay in appropriate channel(s). Future plan on making this dynamic
-        if(command[0].startsWith(Reference.PREFIX)
+        if(command[0].startsWith(AppConfig.PROPERTIES.getProperty(PREFIX))
                 && !(event.getChannel().getName().equalsIgnoreCase("botcommands")
                 || event.getChannel().getName().equalsIgnoreCase("bottestinglab"))){
             return;
@@ -127,25 +145,14 @@ public class Commands extends ListenerAdapter{
             }
 
             //beatmapId = command[0].substring(21);
-            String mapLink = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY
+            String mapLink = "https://osu.ppy.sh/api/get_beatmaps?k=" + AppConfig.PROPERTIES.getProperty(OSU)
                     + beatmapId + "&type=string";
-
-            HttpURLConnection conn = null;
-            InputStream in = null;
-            try{
-                conn = JSONReader.connect(mapLink, Reference.OSUAPIKEY);
-                in = conn.getInputStream();
-            }catch(IOException e){
-                return;
-            }
-
             StringBuffer response = null;
             try{
-                response = JSONReader.toStringBuffer(in);
+                response = JSONHelper.connect(mapLink);
             }catch(IOException e){
                 return;
             }
-            conn.disconnect();
 
             //Read JSON response and print
             JSONArray beatmapMetadataResponse = new JSONArray(response.toString());
@@ -155,7 +162,7 @@ public class Commands extends ListenerAdapter{
             int minutes = mapLength / 60;
             int seconds = mapLength % 60;
 
-            String status = osuApprovedReader(data.getInt("approved"));
+            String status = CommandListenerHelper.osuApprovedReader(data.getInt("approved"));
 
             String output = "**Song:** " + data.getString("title") + "\n"
                     + "**Artist:** " + data.getString("artist") + "\n"
@@ -187,24 +194,13 @@ public class Commands extends ListenerAdapter{
                 user = command[0].substring(25);
             }
 
-            String profileLink = "https://osu.ppy.sh/api/get_user?k=" + Reference.OSUAPIKEY + "&u=" + user + "&type=id";
-
-            HttpURLConnection conn = null;
-            InputStream in = null;
-            try{
-                conn = JSONReader.connect(profileLink, Reference.OSUAPIKEY);
-                in = conn.getInputStream();
-            }catch(IOException e){
-                return;
-            }
-
+            String profileLink = "https://osu.ppy.sh/api/get_user?k=" + AppConfig.PROPERTIES.getProperty(OSU) + "&u=" + user + "&type=id";
             StringBuffer response = null;
             try{
-                response = JSONReader.toStringBuffer(in);
+                response = JSONHelper.connect(profileLink);
             }catch(IOException e){
                 return;
             }
-            conn.disconnect();
 
             //Read JSON response and print
             JSONArray userResponse = new JSONArray(response.toString());
@@ -245,7 +241,7 @@ public class Commands extends ListenerAdapter{
         // commands
         else if(command[0].equalsIgnoreCase("!commands")){
             String output = "**List of commands:**\n!ping\n!roll\n!emotes\n!role\n"
-                    + "!server\n!love\n!osu\n!activity";
+                    + "!server\n!love\n!osu\n!activity\n!choose\n!twitch\n!waifu\n!waifudump";
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
             eb.setDescription(output);
@@ -258,29 +254,27 @@ public class Commands extends ListenerAdapter{
         else if(command[0].equalsIgnoreCase("!roll")){
             int max = 0;
             if(command.length == 1) {
-                max = 10;
+                max = 100;
             }else {
                 try {
                     max = Integer.parseInt(command[1]);
-                }catch(NumberFormatException e){
-                    event.getChannel().sendMessage("ERROR: Bad input").queue();
-                    return;
+                    if(max <= 0) {
+                        throw new NumberFormatException();
+                    }
+                } catch (NumberFormatException e) {
+                    max = 100;
                 }
-            }
-            if(max <= 0) {
-                event.getChannel().sendMessage("ERROR").queue();
-                return;
             }
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
-            eb.setDescription(event.getAuthor().getAsMention() + " rolls " + roll(max));
+            eb.setDescription(event.getAuthor().getName() + " rolls " + CommandListenerHelper.roll(max));
             event.getChannel().sendMessage(eb.build()).queue();
         }//returns a random # from 1 to 100
 
 
         // emotes
         else if(command[0].equalsIgnoreCase("!emotes")){
-            String output = "**Server Emotes:**\n" + emotePrint(event);
+            String output = "**Server Emotes:**\n" + CommandListenerHelper.emotePrint(event);
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
             eb.setDescription(output);
@@ -288,56 +282,36 @@ public class Commands extends ListenerAdapter{
         }//returns all of the server emotes
 
 
-        /* DEPRECATED
         // choose
 		else if(command[0].equalsIgnoreCase("!choose")) {
-			//System.out.println(command[1].length());
 			if(command.length == 1) {
-    				event.getChannel().sendMessage("ERROR: Invalid use of command. "
-    				+ "Should be !choose <choice1> <choice2>...<choiceN>."
-    				+ " Choices need to be one word").queue();
+                event.getChannel().sendMessage("ERROR: Invalid use of command. "
+                + "Should be !choose <choice1>, <choice2>, <choiceN>.").queue();
+                return;
 			}
-    			else if(command.length == 2) {
-    				event.getChannel().sendMessage("I suggest you " + command[1]).queue();
-    				//command.length==2||(command.length>2&&!command[1].endsWith(","))
-    				//example: !choose sleep
-    			}
-    			else if(command.length > 2) {
+			command[0] = "";
+			String line = String.join(" ", command).trim();
+			String[] options = line.split(",");
 
-    				String output = "";
-    				for(int i = 1; i < command.length; i++) {
-    					if(i + 1 == command.length) {
-    						output += command[i];
-    						break;
-    					}
-    					output += command[i] + " ";
-    				}
-
-
-    				for(int i = 1; i < command.length; i++) {
-    					if(!command[i].contains(",") && i + 1 == command.length) {
-
-    					}
-    				}
-
-    				int indexPick = roll(command.length-1);
-    				//add if statement to trim comma HERE
-    				String temp = command[indexPick];
-    				event.getChannel().sendMessage("I suggest you " + temp).queue();
-    				//need to add a temp string that will trim an excess comma ',' (i.e code, sleep)
-    			}//example: !choose code, sleep, play
+            if(options.length == 1) {
+                //example: !choose sleep
+                event.getChannel().sendMessage("I suggest " + options[0]).queue();
+            }
+            else if(options.length > 1) {
+                //example: !choose code, sleep, play
+                int indexPick = CommandListenerHelper.roll(options.length);
+                String temp = options[indexPick - 1].trim();
+                event.getChannel().sendMessage("I suggest " + temp).queue();
+            }
 		}// returns the arg that is chosen
-		*/
 
 
         // love
         else if(command[0].equalsIgnoreCase("!love")) {
             int maxMembers = event.getGuild().getMembers().size();
-            //System.out.println(maxMembers);
-            //System.out.println(event.getGuild().getMembers().get(roll(maxMembers)));
             String lover = "";
             do {
-                lover = event.getGuild().getMembers().get(roll(maxMembers)).getUser().getName();
+                lover = event.getGuild().getMembers().get(CommandListenerHelper.roll(maxMembers)).getUser().getName();
             }while(event.getAuthor().getName().equals(lover));
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
@@ -346,21 +320,7 @@ public class Commands extends ListenerAdapter{
         }// returns the user "loving" a random user in guild
 
 
-        // giveaway
-        else if(command[0].equalsIgnoreCase("!giveaway")) {
-            if(!event.getMember().isOwner()) {
-                return;
-            }//tests if author is the owner
-            int maxMembers = event.getGuild().getMembers().size();
-            String winner = "";
-            do {
-                winner = event.getGuild().getMembers().get(roll(maxMembers)).getUser().getName();
-            }while(event.getAuthor().getName().equals(winner));
-            event.getChannel().sendMessage("Winner: " + winner).queue();
-            //System.out.println("Winner: "+winner);
-        }// returns the winner of the giveaway
-
-
+        // role
         else if(command[0].equalsIgnoreCase("!role")) {
             if(command.length == 1) {
                 event.getChannel().sendMessage("Role Commands. Command flags to use after **!role**: -list -info").queue();
@@ -422,19 +382,14 @@ public class Commands extends ListenerAdapter{
                         user += " " + command[i];
                     }
 
-                    InputStream in = null;
-                    HttpURLConnection conn = null;
                     StringBuffer response = null;
                     try {
-                        String site = "https://osu.ppy.sh/api/get_user_best?k=" + Reference.OSUAPIKEY + "&u=" + user + "&limit=5&type=string";
-                        conn = JSONReader.connect(site, Reference.OSUAPIKEY);
-                        in = conn.getInputStream();
-                        response = JSONReader.toStringBuffer(in);
+                        String site = "https://osu.ppy.sh/api/get_user_best?k=" + AppConfig.PROPERTIES.getProperty(OSU) + "&u=" + user + "&limit=5&type=string";
+                        response = JSONHelper.connect(site);
                     } catch (IOException e) {
                         event.getChannel().sendMessage("RIP").queue();
                         return;
                     }
-                    conn.disconnect();
                     //print in String
                     //System.out.println(response.toString());
 
@@ -447,17 +402,14 @@ public class Commands extends ListenerAdapter{
 
                     // iterates through each beatmap to get it's metadata
                     for (int i = 0; i < userBestResponse.length(); i++) {
-                        String score = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY + "&b="
+                        String score = "https://osu.ppy.sh/api/get_beatmaps?k=" + AppConfig.PROPERTIES.getProperty(OSU) + "&b="
                                 + userBestResponse.getJSONObject(i).getInt("beatmap_id") + "&type=string";
                         try {
-                            conn = JSONReader.connect(score, Reference.OSUAPIKEY);
-                            in = conn.getInputStream();
-                            response = JSONReader.toStringBuffer(in);
+                            response = JSONHelper.connect(score);
                         } catch (IOException e) {
                             event.getChannel().sendMessage("RIP").queue();
                             return;
                         }
-                        conn.disconnect();
                         //print in String
                         //System.out.println(response.toString());
 
@@ -467,7 +419,7 @@ public class Commands extends ListenerAdapter{
 
                         //System.out.println(data.toString());
                         int modCode = userBestResponse.getJSONObject(i).getInt("enabled_mods");
-                        String mods = osuModReader(modCode);
+                        String mods = CommandListenerHelper.osuModReader(modCode);
                         mapData += "\n[" + data.getString("artist") + " - " + data.getString("title")
                                 + "](https://osu.ppy.sh/beatmapsets/" + data.getString("beatmapset_id") + "#osu/" + data.getString("beatmap_id") + ") ["
                                 + data.getString("version") + "]"
@@ -500,18 +452,13 @@ public class Commands extends ListenerAdapter{
                     }
 
                     // establish connection for user recent scores
-                    InputStream in = null;
-                    HttpURLConnection conn = null;
                     StringBuffer response = null;
                     try {
-                        String site = "https://osu.ppy.sh/api/get_user_recent?k=" + Reference.OSUAPIKEY + "&u=" + user + "&limit=50&type=string";
-                        conn = JSONReader.connect(site, Reference.OSUAPIKEY);
-                        in = conn.getInputStream();
-                        response = JSONReader.toStringBuffer(in);
+                        String site = "https://osu.ppy.sh/api/get_user_recent?k=" + AppConfig.PROPERTIES.getProperty(OSU) + "&u=" + user + "&limit=50&type=string";
+                        response = JSONHelper.connect(site);
                     } catch (IOException e) {
                         return;
                     }
-                    conn.disconnect();
 
                     JSONArray userRecentResponse = new JSONArray(response.toString());
                     //System.out.println(response.toString());
@@ -540,17 +487,14 @@ public class Commands extends ListenerAdapter{
                     String mapData = "";
 
                     // score data
-                    String scoreData = "https://osu.ppy.sh/api/get_scores?k=" + Reference.OSUAPIKEY + "&b="
+                    String scoreData = "https://osu.ppy.sh/api/get_scores?k=" + AppConfig.PROPERTIES.getProperty(OSU) + "&b="
                             + userRecentResponse.getJSONObject(recentPlayIndex).getInt("beatmap_id")
                             + "&u=" + user + "&type=string";
                     try {
-                        conn = JSONReader.connect(scoreData, Reference.OSUAPIKEY);
-                        in = conn.getInputStream();
-                        response = JSONReader.toStringBuffer(in);
+                        response = JSONHelper.connect(scoreData);
                     } catch(IOException e) {
                         return;
                     }
-                    conn.disconnect();
 
                     String ppAmount = "";
                     try {
@@ -567,16 +511,13 @@ public class Commands extends ListenerAdapter{
                     }
 
                     // beatmap metadata
-                    String beatmapData = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY + "&b="
+                    String beatmapData = "https://osu.ppy.sh/api/get_beatmaps?k=" + AppConfig.PROPERTIES.getProperty(OSU) + "&b="
                             + userRecentResponse.getJSONObject(recentPlayIndex).getInt("beatmap_id") + "&type=string";
                     try {
-                        conn = JSONReader.connect(beatmapData, Reference.OSUAPIKEY);
-                        in = conn.getInputStream();
-                        response = JSONReader.toStringBuffer(in);
+                        response = JSONHelper.connect(beatmapData);
                     } catch (IOException e) {
                         return;
                     }
-                    conn.disconnect();
 
                     //Read JSON response and print
                     JSONArray beatmapMetadataResponse = new JSONArray(response.toString());
@@ -584,7 +525,7 @@ public class Commands extends ListenerAdapter{
 
                     //System.out.println(data.toString());
                     int modCode = userRecentResponse.getJSONObject(recentPlayIndex).getInt("enabled_mods");
-                    String mods = osuModReader(modCode);
+                    String mods = CommandListenerHelper.osuModReader(modCode);
                     mapData = "[" + data.getString("artist") + " - " + data.getString("title") + "](https://osu.ppy.sh/beatmapsets/" + data.getString("beatmapset_id") + "#osu/" + data.getString("beatmap_id")
                             + ") [" + data.getString("version") + "]" + " by [" + data.getString("creator") + "](https://osu.ppy.sh/users/" + data.getString("creator_id") + ")\n";
                     if(!ppAmount.isEmpty()) {
@@ -626,18 +567,13 @@ public class Commands extends ListenerAdapter{
                             user += " " + command[i];
                         }
 
-                        InputStream in = null;
-                        HttpURLConnection conn = null;
                         StringBuffer response = null;
                         try {
-                            String site = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY + "&u=" + user + "&m=0&type=string";
-                            conn = JSONReader.connect(site, Reference.OSUAPIKEY);
-                            in = conn.getInputStream();
-                            response = JSONReader.toStringBuffer(in);
+                            String site = "https://osu.ppy.sh/api/get_beatmaps?k=" + AppConfig.PROPERTIES.getProperty(OSU) + "&u=" + user + "&m=0&type=string";
+                            response = JSONHelper.connect(site);
                         } catch (IOException e) {
                             return;
                         }
-                        conn.disconnect();
 
                         JSONArray beatmapResponse = new JSONArray(response.toString());
                         //System.out.println(response.toString());
@@ -651,7 +587,7 @@ public class Commands extends ListenerAdapter{
                         JSONObject specifiedMap = beatmapResponse.getJSONObject(indexOfMap);
 
                         // translate beatmap status
-                        String status = osuApprovedReader(specifiedMap.getInt("approved"));
+                        String status = CommandListenerHelper.osuApprovedReader(specifiedMap.getInt("approved"));
 
                         // find length
                         int minutes = specifiedMap.getInt("total_length") / 60;
@@ -690,18 +626,13 @@ public class Commands extends ListenerAdapter{
                         //System.out.println(sqlFormattedDate);
 
                         // make connection to get beatmaps
-                        InputStream in = null;
-                        HttpURLConnection conn = null;
                         StringBuffer response = null;
                         try {
-                            String site = "https://osu.ppy.sh/api/get_beatmaps?k=" + Reference.OSUAPIKEY + "&since=" + sqlFormattedDate +"&limit=50&m=0&type=string";
-                            conn = JSONReader.connect(site, Reference.OSUAPIKEY);
-                            in = conn.getInputStream();
-                            response = JSONReader.toStringBuffer(in);
+                            String site = "https://osu.ppy.sh/api/get_beatmaps?k=" + AppConfig.PROPERTIES.getProperty(OSU) + "&since=" + sqlFormattedDate +"&limit=50&m=0&type=string";
+                            response = JSONHelper.connect(site);
                         } catch (IOException e) {
                             return;
                         }
-                        conn.disconnect();
 
                         JSONArray beatmapsResponse = new JSONArray(response.toString());
 
@@ -870,121 +801,176 @@ public class Commands extends ListenerAdapter{
             }
         }
 
+        else if(command[0].equalsIgnoreCase("!twitch")) {
+            if(command.length == 1) {
+                event.getChannel().sendMessage("Twitch Commands. Flags to use after **!twitch**: -user").queue();
+                return;
+            }
+            if(command[1].equalsIgnoreCase("-user")) {
+                if(command.length == 2) {
+                    event.getChannel().sendMessage("Twitch User. Returns profile data. (i.e. !twitch -user GHAngeloid)").queue();
+                }
+                else if(command.length == 3) {
+                    try {
+                        String link = "https://api.twitch.tv/helix/users?login=" + command[2];
+                        StringBuffer response = JSONHelper.connect(link, "Client-ID", AppConfig.PROPERTIES.getProperty(TWITCH));
+                        JSONObject profileData = new JSONObject(response.toString()).getJSONArray("data").getJSONObject(0);
+
+                        link = "https://api.twitch.tv/helix/users/follows?to_id=" + profileData.getInt("id") + "&first=1";
+                        response = JSONHelper.connect(link, "Client-ID", AppConfig.PROPERTIES.getProperty(TWITCH));
+                        int followers = new JSONObject(response.toString()).getInt("total");
+                        EmbedBuilder eb = new EmbedBuilder();
+                        String broadcasterType = "";
+                        if(!profileData.getString("broadcaster_type").isEmpty()) {
+                            broadcasterType = profileData.getString("broadcaster_type");
+                            broadcasterType = Character.toUpperCase(broadcasterType.charAt(0)) + broadcasterType.substring(1);
+                            broadcasterType = "\n\n" + broadcasterType;
+                        }
+
+                        eb.setColor(Color.ORANGE);
+                        eb.setAuthor(profileData.getString("display_name"), "https://twitch.tv/" + command[2],
+                                profileData.getString("profile_image_url"));
+                        eb.setDescription(profileData.getString("description")
+                                + broadcasterType + "\n"
+                                + String.format("%,d", followers) + " followers\n"
+                                + String.format("%,d", profileData.getLong("view_count")) + " views");
+                        eb.setFooter("Twitch | Profile");
+                        event.getChannel().sendMessage(eb.build()).queue();
+                    }
+                    catch(Exception e) {
+                        //e.printStackTrace();
+                    }
+                }
+            }
+            else if(command[1].equalsIgnoreCase("-topgames")) {
+                try {
+                    String link = "https://api.twitch.tv/helix/games/top?first=5";
+                    StringBuffer response = JSONHelper.connect(link, "Client-ID", AppConfig.PROPERTIES.getProperty(TWITCH));
+                    String description = "";
+                    for(int i = 0; i < 5; i++) {
+                        JSONObject data = new JSONObject(response.toString()).getJSONArray("data").getJSONObject(i);
+                        String gameName = data.getString("name");
+                        String gameNameURL = String.join("%20", gameName.split(" "));
+                        description += (i + 1) + ". [" + gameName + "](https://twitch.tv/directory/game/" + gameNameURL + ")\n";
+                    }
+                    EmbedBuilder eb = new EmbedBuilder();
+                    eb.setColor(Color.ORANGE);
+                    eb.setAuthor("Top Games on Twitch");
+                    eb.setDescription(description);
+                    eb.setFooter("Twitch | Top Games");
+                    event.getChannel().sendMessage(eb.build()).queue();
+                }
+                catch(Exception e) {
+                    //e.printStackTrace();
+                }
+            }
+        }
+
         // pic/gif commands
+        else if(command[0].equalsIgnoreCase("!waifu")) {
+            try {
+                boolean isNSFW = true;
+                JSONObject image = null;
+                String fileURL = "";
+                for(int apiLookUp = 0; apiLookUp < 5; apiLookUp++){
+                    if(!isNSFW) {
+                        // break for-loop
+                        break;
+                    }
+                    String link = "https://danbooru.donmai.us/posts.json?limit=10&random=true&tags=1girl";
+                    URL url = new URL(link);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
+                    conn.setRequestProperty("Accept", "application/json");
+                    InputStream inputStream = conn.getInputStream();
+                    StringBuffer stringBuffer = JSONHelper.toStringBuffer(inputStream);
+                    conn.disconnect();
+
+                    JSONArray imageDataArray = new JSONArray(stringBuffer.toString());
+                    for(int i = 0; i < imageDataArray.length(); i++) {
+                        image = imageDataArray.getJSONObject(i);
+                        try {
+                            fileURL = image.getString("file_url");
+                        }
+                        catch(JSONException e){
+                            continue;
+                        }
+                        if(image.getString("rating").equals("s") && !fileURL.isEmpty()) {
+                            //System.out.println(image.toString());
+                            isNSFW = false;
+                            break;
+                        }
+                    }
+                }
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setColor(Color.ORANGE);
+                eb.setImage(fileURL);
+                event.getChannel().sendMessage(eb.build()).queue();
+            }
+            catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        else if(command[0].equalsIgnoreCase("!waifudump")) {
+            try {
+                boolean isNSFW = true;
+                JSONObject image = null;
+                int imageCount = 0;
+                String[] imageURLArray = new String[3];
+                for(int apiLookUp = 0; apiLookUp < 5; apiLookUp++){
+                    if(!isNSFW) {
+                        // break for-loop
+                        break;
+                    }
+                    String link = "https://danbooru.donmai.us/posts.json?limit=15&random=true&tags=1girl";
+                    URL url = new URL(link);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
+                    conn.setRequestProperty("Accept", "application/json");
+                    InputStream inputStream = conn.getInputStream();
+                    StringBuffer stringBuffer = JSONHelper.toStringBuffer(inputStream);
+                    conn.disconnect();
+
+                    JSONArray imageDataArray = new JSONArray(stringBuffer.toString());
+                    for(int i = 0; i < imageDataArray.length(); i++) {
+                        if(imageCount == 3) {
+                            //System.out.println("Acquired 3 pictures");
+                            break;
+                        }
+                        image = imageDataArray.getJSONObject(i);
+                        String fileURL = null;
+                        try {
+                            fileURL = image.getString("file_url");
+                        }
+                        catch(JSONException e){
+                            continue;
+                        }
+                        if(image.getString("rating").equals("s") && fileURL != null) {
+                            //System.out.println(image.toString());
+                            imageURLArray[imageCount] = image.getString("file_url");
+                            isNSFW = false;
+                            imageCount += 1;
+                        }
+                    }
+                }
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setColor(Color.ORANGE);
+                eb.setImage(imageURLArray[0]);
+                event.getChannel().sendMessage(eb.build()).queue();
+                eb.setImage(imageURLArray[1]);
+                event.getChannel().sendMessage(eb.build()).queue();
+                eb.setImage(imageURLArray[2]);
+                event.getChannel().sendMessage(eb.build()).queue();
+            }
+            catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
 
 
     }// end of commands
-
-
-
-    // List of helper methods for some of the commands
-
-
-    // emotePrint
-    private String emotePrint(GuildMessageReceivedEvent e){
-        int emoteTotal = e.getGuild().getEmotes().size();
-        String[] idList = new String[emoteTotal];
-        String message = "";
-        for(int i = 0; i < emoteTotal; i++){
-            idList[i] = e.getGuild().getEmotes().get(i).getId();
-            //e.getGuild().getEmotes().get(i);
-        }// list of emoteIDs
-
-        for(int j = 0; j < emoteTotal; j++){
-            if(j == emoteTotal - 1){
-                message += "\t" + e.getGuild().getEmoteById(idList[j]).getAsMention() + "\n";
-            }
-            message += "\t" + e.getGuild().getEmoteById(idList[j]).getAsMention() + "\n";
-        }//constructs entire message with emote names
-        return message;
-    }// constructs entire list of emotes on server as a message
-
-
-    private int roll(int max){
-        Random rn = new Random();
-        int answer = rn.nextInt(max)+1;
-        return answer;
-    }// returns a roll from 1 and n = max (ex: 1 and 100)
-
-
-    private String osuModReader(int code) {
-
-        // referencing osu! API documentation on Game Mods
-        if(code == 0) {
-            return "NoMod";
-        }
-        String result = "";
-        while(code != 0) {
-            if(code >= 16416) {
-                result = "PF" + result;
-                code -= 16416;
-            }else if(code >= 8192) {
-                result = "AP" + result;
-                code -= 8192;
-            }else if(code >= 4096) {
-                result = "SO" + result;
-                code -= 4096;
-            }else if(code >= 2048) {
-                result = "AP" + result;
-                code -= 2048;
-            }else if(code >= 1024) {
-                result = "FL" + result;
-                code -= 1024;
-            }else if(code >= 576) {
-                result = "NC" + result;
-                code -= 576;
-            }else if(code >= 256) {
-                result = "HT" + result;
-                code -= 256;
-            }else if(code >= 128) {
-                result = "RX" + result;
-                code -= 128;
-            }else if(code >= 64) {
-                result = "DT" + result;
-                code -= 64;
-            }else if(code >= 32) {
-                result = "SD" + result;
-                code -= 32;
-            }else if(code >= 16) {
-                result = "HR" + result;
-                code -= 16;
-            }else if(code >= 8) {
-                result = "HD" + result;
-                code -= 8;
-            }else if(code >= 4) {
-                result = "NoVideo" + result;
-                code -= 4;
-            }else if(code >= 2) {
-                result = "EZ" + result;
-                code -= 2;
-            }else if(code >= 1) {
-                result = "NF" + result;
-                code -= 1;
-            }
-        }
-        return result;
-    }// end of osuModReader
-
-
-    private String osuApprovedReader(int status) {
-        switch(status) {
-            case 4:
-                return "Loved";
-            case 3:
-                return "Qualified";
-            case 2:
-                return "Approved";
-            case 1:
-                return "Ranked";
-            case 0:
-                return "Pending";
-            case -1:
-                return "WIP";
-            case -2:
-                return "Graveyard";
-            default:
-                return null;
-        }
-    }
 
 }

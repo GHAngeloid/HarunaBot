@@ -1,19 +1,24 @@
-package harunabot;
+package application;
 
 import javax.security.auth.login.LoginException;
 
+import configuration.AppConfig;
+import listener.*;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.audio.factory.IAudioSendFactory;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Activity.ActivityType;
-import net.dv8tion.jda.api.exceptions.RateLimitedException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
+import java.io.IOException;
+
+/**
+ * HarunaBot
+ */
 public class HarunaBot extends ListenerAdapter{
 
-    public static void main(String[] args) throws LoginException, InterruptedException, IllegalArgumentException{
+    public static void main(String[] args) throws LoginException, IOException, IllegalArgumentException{
 
         // builds account type
         JDABuilder builder = new JDABuilder(AccountType.BOT);
@@ -26,19 +31,26 @@ public class HarunaBot extends ListenerAdapter{
         // include Listener classes
         addListeners(builder);
 
+        // initialize properties
+        AppConfig.initializeProperties();
+
         // set token to JDA and build blocking
-        JDA jda = builder.setToken(Reference.TOKEN).build();
+        JDA jda = builder.setToken(AppConfig.PROPERTIES.getProperty("TOKEN")).build();
 
     }
 
+    /**
+     * Add Listeners to JDABuilder
+     * @param builder JDABuilder
+     */
     private static void addListeners(JDABuilder builder) {
 
         builder.addEventListeners(new StatusListener(),
                 new GuildMemberListener(),
                 new VoiceListener(),
                 new PMListener(),
-                new Commands(),
-                new Audit());
+                new CommandListener(),
+                new AuditListener());
 
     }
 

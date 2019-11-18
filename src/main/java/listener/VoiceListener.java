@@ -1,4 +1,4 @@
-package harunabot;
+package listener;
 
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import java.awt.Color;
@@ -10,8 +10,15 @@ import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent;
 
 import javax.annotation.Nonnull;
 
+/**
+ * Voice Listener
+ */
 public class VoiceListener extends ListenerAdapter {
 
+    /**
+     * Member joins VC.
+     * @param event GuildVoiceJoinEvent
+     */
     public void onGuildVoiceJoin(@Nonnull GuildVoiceJoinEvent event) {
 
         EmbedBuilder eb = new EmbedBuilder();
@@ -21,6 +28,10 @@ public class VoiceListener extends ListenerAdapter {
 
     }
 
+    /**
+     * Member leaves VC.
+     * @param event GuildVoiceLeaveEvent
+     */
     public void onGuildVoiceLeave(@Nonnull GuildVoiceLeaveEvent event) {
 
         EmbedBuilder eb = new EmbedBuilder();
@@ -30,6 +41,10 @@ public class VoiceListener extends ListenerAdapter {
 
     }
 
+    /**
+     * Member moves to another VC.
+     * @param event GuildVoiceMoveEvent
+     */
     public void onGuildVoiceMove(@Nonnull GuildVoiceMoveEvent event) {
 
         EmbedBuilder eb = new EmbedBuilder();

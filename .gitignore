@@ -1,7 +1,8 @@
 # Directories or Files
 .idea/
 target/
-Reference.java*
+resources/
+Reference.*
 HarunaBotNotes.txt
 id_rsa*
 
