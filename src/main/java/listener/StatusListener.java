@@ -1,14 +1,12 @@
 package listener;
 
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-
-//import java.awt.Color;
-
-//import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.api.events.DisconnectEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.ReconnectedEvent;
 import net.dv8tion.jda.api.events.ShutdownEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 
@@ -17,14 +15,20 @@ import javax.annotation.Nonnull;
  */
 public class StatusListener extends ListenerAdapter {
 
+    static Logger logger = LoggerFactory.getLogger(StatusListener.class);
+
     /**
      * JDA is ready.
      * @param event ReadyEvent
      */
     public void onReady(@Nonnull ReadyEvent event){
         for(int i = 0; i < event.getJDA().getGuilds().size(); i++) {
-            System.out.printf("[+] %s (%s Members) - READY\n", event.getJDA().getGuilds().get(i).getName(),
-                    event.getJDA().getGuilds().get(i).getMembers().size());
+            String message = event.getJDA().getGuilds().get(i).getName() + " ("
+                    + event.getJDA().getGuilds().get(i).getMembers().size() + " Members) - READY";
+            logger.info(message);
+            //logger.debug("this is a debug log message");
+            //logger.info("this is a information log message");
+            //logger.warn("this is a warning log message");
         }
         //DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
         //Date dateobj = new Date();
@@ -43,8 +47,9 @@ public class StatusListener extends ListenerAdapter {
      */
     public void onShutdown(@Nonnull ShutdownEvent event){
         for(int i = 0; i < event.getJDA().getGuilds().size(); i++) {
-            System.out.printf("[+] %s (%s Members) - SHUTDOWN\n", event.getJDA().getGuilds().get(i).getName(),
-                    event.getJDA().getGuilds().get(i).getMembers().size());
+            String message = event.getJDA().getGuilds().get(i).getName() + " ("
+                    + event.getJDA().getGuilds().get(i).getMembers().size() + " Members) - SHUTDOWN";
+            logger.info(message);
         }
 		/*
 		EmbedBuilder eb = new EmbedBuilder();
@@ -60,8 +65,9 @@ public class StatusListener extends ListenerAdapter {
      */
     public void onDisconnect(@Nonnull DisconnectEvent event) {
         for(int i = 0; i < event.getJDA().getGuilds().size(); i++) {
-            System.out.printf("[+] %s (%s Members) - DISCONNECTED\n", event.getJDA().getGuilds().get(i).getName(),
-                    event.getJDA().getGuilds().get(i).getMembers().size());
+            String message = event.getJDA().getGuilds().get(i).getName() + " ("
+                    + event.getJDA().getGuilds().get(i).getMembers().size() + " Members) - DISCONNECTED";
+            logger.info(message);
         }
 		/*
 		EmbedBuilder eb = new EmbedBuilder();
@@ -77,8 +83,9 @@ public class StatusListener extends ListenerAdapter {
      */
     public void onReconnect(@Nonnull ReconnectedEvent event) {
         for(int i = 0; i < event.getJDA().getGuilds().size(); i++) {
-            System.out.printf("[+] %s (%s Members) - RECONNECTED\n", event.getJDA().getGuilds().get(i).getName(),
-                    event.getJDA().getGuilds().get(i).getMembers().size());
+            String message = event.getJDA().getGuilds().get(i).getName() + " ("
+                    + event.getJDA().getGuilds().get(i).getMembers().size() + " Members) - RECONNECTED";
+            logger.info(message);
         }
 		/*
 		EmbedBuilder eb = new EmbedBuilder();

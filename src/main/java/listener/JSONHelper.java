@@ -1,5 +1,7 @@
 package listener;
 
+import configuration.AppConfig;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,6 +10,21 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class JSONHelper {
+
+    /**
+     * isNSFW
+     * @param tags String
+     * @return boolean
+     */
+    static boolean isNSFW(String tags) {
+        // put all of these tags in a txt file and load with a File API by storing in a list
+        for(String tagFromList : AppConfig.tagList) {
+            if(tags.contains(tagFromList)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * toStringBuffer

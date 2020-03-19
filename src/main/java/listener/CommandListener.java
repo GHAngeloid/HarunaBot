@@ -1,38 +1,35 @@
 package listener;
 
 import configuration.AppConfig;
-import jdk.nashorn.internal.runtime.JSONListAdapter;
+import configuration.Command;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import java.awt.Color;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
-import java.util.Random;
+import java.time.LocalDateTime;
+import java.util.*;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-//import net.dv8tion.jda.core.requests.RestAction;
-import net.dv8tion.jda.api.utils.AttachmentOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Activity.Timestamps;
-//import net.dv8tion.jda.core.entities.MessageHistory;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.ExecutionException;
 
 public class CommandListener extends ListenerAdapter{
 
-    private boolean isLocked = false;
+    static Logger logger = LoggerFactory.getLogger(CommandListener.class);
 
+    static String[] defaultCommands = {"!ping", "!roll", "!role", "!server", "!love", "!osu", "!activity",
+        "!choose", "!twitch", "!waifu", "!waifudump", "!add", "!help"};
 
     @Override
     public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event)
@@ -45,24 +42,10 @@ public class CommandListener extends ListenerAdapter{
         // split Message content apart by whitespace
         String[] command = event.getMessage().getContentRaw().split(" ");
 
-        /* DEPRECATED. Reason: Each person can say the same message
-        // owo listener
-        if(command[0].equalsIgnoreCase("owo")){
-            if(!event.getAuthor().isBot() && !isLocked) {
-                event.getChannel().sendMessage("owo").queue();
-                try {
-                    isLocked = true;
-                    Thread.sleep(3000);
-                }
-                catch(InterruptedException e) {
-                    System.out.println("Improper sleep");
-                }
-                isLocked = false;
-                return;
-            }
-            System.out.println("Bot sent message");
+        // avoid bot spam
+        if(event.getAuthor().isBot()) {
+            return;
         }
-        */
 
         // Check if command does not start with prefix or the website is not osu!
         if(!command[0].startsWith(AppConfig.PROPERTIES.getProperty(PREFIX)) && !command[0].startsWith("https://osu.ppy.sh/")) {
@@ -120,14 +103,13 @@ public class CommandListener extends ListenerAdapter{
             return;
         }
 
-        // initialize Date
-        Date now = new Date();
+        // initialize DateTime
+        LocalDateTime current = LocalDateTime.now();
 
         // osu! beatmap listener for info
         // CHANGE : include new URL for beatmaps for new website
         if(command[0].startsWith("https://osu.ppy.sh/b/") || command[0].startsWith("https://osu.ppy.sh/s/")
             || command[0].startsWith("https://osu.ppy.sh/beatmapsets/")) {
-            JSONObject data = null;
             String beatmapId = "";
 
             if(command[0].charAt(19) == 's') {
@@ -147,7 +129,7 @@ public class CommandListener extends ListenerAdapter{
             //beatmapId = command[0].substring(21);
             String mapLink = "https://osu.ppy.sh/api/get_beatmaps?k=" + AppConfig.PROPERTIES.getProperty(OSU)
                     + beatmapId + "&type=string";
-            StringBuffer response = null;
+            StringBuffer response;
             try{
                 response = JSONHelper.connect(mapLink);
             }catch(IOException e){
@@ -156,7 +138,7 @@ public class CommandListener extends ListenerAdapter{
 
             //Read JSON response and print
             JSONArray beatmapMetadataResponse = new JSONArray(response.toString());
-            data = beatmapMetadataResponse.getJSONObject(0);
+            JSONObject data = beatmapMetadataResponse.getJSONObject(0);
 
             int mapLength = data.getInt("total_length");
             int minutes = mapLength / 60;
@@ -195,7 +177,7 @@ public class CommandListener extends ListenerAdapter{
             }
 
             String profileLink = "https://osu.ppy.sh/api/get_user?k=" + AppConfig.PROPERTIES.getProperty(OSU) + "&u=" + user + "&type=id";
-            StringBuffer response = null;
+            StringBuffer response;
             try{
                 response = JSONHelper.connect(profileLink);
             }catch(IOException e){
@@ -238,14 +220,43 @@ public class CommandListener extends ListenerAdapter{
         }
 
 
+        // help
+        else if(command[0].equalsIgnoreCase("!help")) {
+            event.getChannel().sendMessage("Use **!commands** for full list of commands.").queue();
+        }
+
+
         // commands
         else if(command[0].equalsIgnoreCase("!commands")){
-            String output = "**List of commands:**\n!ping\n!roll\n!emotes\n!role\n"
-                    + "!server\n!love\n!osu\n!activity\n!choose\n!twitch\n!waifu\n!waifudump";
+            String output = "";
+            boolean isFlag = true;
+            if(command.length == 2) {
+                if(command[1].equalsIgnoreCase("-custom")) {
+                    output = "**Custom Commands**";
+
+                    if(AppConfig.commandSet.size() == 0) {
+                        output += "\n<empty>";
+                    }
+                    else {
+                        for(Command currentCommand : AppConfig.commandSet) {
+                            output += "\n" + currentCommand.getCommandName();
+                        }
+                    }
+                    isFlag = false;
+                }
+            }
+            if(isFlag) {
+                output = "**Default Commands**";
+                for(String currentCommand : defaultCommands) {
+                    output += '\n' + currentCommand;
+                }
+                output += "\n\nFor custom commands, please include '-custom' flag. (i.e. **!commands -custom**)";
+            }
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(Color.ORANGE);
             eb.setDescription(output);
             event.getChannel().sendMessage(eb.build()).queue();
+
             //need to find a better solution to print all commands through a message
         }
 
@@ -272,21 +283,11 @@ public class CommandListener extends ListenerAdapter{
         }//returns a random # from 1 to 100
 
 
-        // emotes
-        else if(command[0].equalsIgnoreCase("!emotes")){
-            String output = "**Server Emotes:**\n" + CommandListenerHelper.emotePrint(event);
-            EmbedBuilder eb = new EmbedBuilder();
-            eb.setColor(Color.ORANGE);
-            eb.setDescription(output);
-            event.getChannel().sendMessage(eb.build()).queue();
-        }//returns all of the server emotes
-
-
         // choose
 		else if(command[0].equalsIgnoreCase("!choose")) {
 			if(command.length == 1) {
-                event.getChannel().sendMessage("ERROR: Invalid use of command. "
-                + "Should be !choose <choice1>, <choice2>, <choiceN>.").queue();
+                event.getChannel().sendMessage("Choose command. Returns a choice that is given with command. "
+                + "(i.e. !choose <choice1>, <choice2>, <choiceN>)").queue();
                 return;
 			}
 			command[0] = "";
@@ -387,12 +388,9 @@ public class CommandListener extends ListenerAdapter{
                         String site = "https://osu.ppy.sh/api/get_user_best?k=" + AppConfig.PROPERTIES.getProperty(OSU) + "&u=" + user + "&limit=5&type=string";
                         response = JSONHelper.connect(site);
                     } catch (IOException e) {
-                        event.getChannel().sendMessage("RIP").queue();
+                        logger.info(e.getMessage());
                         return;
                     }
-                    //print in String
-                    //System.out.println(response.toString());
-
                     //Read JSON response and print
                     JSONArray userBestResponse = new JSONArray(response.toString());
                     int userId = userBestResponse.getJSONObject(0).getInt("user_id");
@@ -407,17 +405,13 @@ public class CommandListener extends ListenerAdapter{
                         try {
                             response = JSONHelper.connect(score);
                         } catch (IOException e) {
-                            event.getChannel().sendMessage("RIP").queue();
+                            logger.info(e.getMessage());
                             return;
                         }
-                        //print in String
-                        //System.out.println(response.toString());
-
                         //Read JSON response and print
                         JSONArray beatmapMetadataResponse = new JSONArray(response.toString());
                         data = beatmapMetadataResponse.getJSONObject(0);
 
-                        //System.out.println(data.toString());
                         int modCode = userBestResponse.getJSONObject(i).getInt("enabled_mods");
                         String mods = CommandListenerHelper.osuModReader(modCode);
                         mapData += "\n[" + data.getString("artist") + " - " + data.getString("title")
@@ -461,7 +455,6 @@ public class CommandListener extends ListenerAdapter{
                     }
 
                     JSONArray userRecentResponse = new JSONArray(response.toString());
-                    //System.out.println(response.toString());
 
                     // if there are no recent scores
                     if (userRecentResponse.isEmpty()) {
@@ -499,7 +492,6 @@ public class CommandListener extends ListenerAdapter{
                     String ppAmount = "";
                     try {
                         JSONArray scoreDataResponse = new JSONArray(response.toString());
-                        //System.out.println(response.toString());
                         for(int i = 0; i < scoreDataResponse.length(); i++) {
                             if(scoreDataResponse.getJSONObject(i).getInt("score") == userRecentResponse.getJSONObject(recentPlayIndex).getInt("score")) {
                                 ppAmount = String.format("%,.2f", scoreDataResponse.getJSONObject(i).getFloat("pp"));
@@ -523,7 +515,6 @@ public class CommandListener extends ListenerAdapter{
                     JSONArray beatmapMetadataResponse = new JSONArray(response.toString());
                     data = beatmapMetadataResponse.getJSONObject(0);
 
-                    //System.out.println(data.toString());
                     int modCode = userRecentResponse.getJSONObject(recentPlayIndex).getInt("enabled_mods");
                     String mods = CommandListenerHelper.osuModReader(modCode);
                     mapData = "[" + data.getString("artist") + " - " + data.getString("title") + "](https://osu.ppy.sh/beatmapsets/" + data.getString("beatmapset_id") + "#osu/" + data.getString("beatmap_id")
@@ -576,7 +567,6 @@ public class CommandListener extends ListenerAdapter{
                         }
 
                         JSONArray beatmapResponse = new JSONArray(response.toString());
-                        //System.out.println(response.toString());
                         if(beatmapResponse.isEmpty()) {
                             return;
                         }
@@ -623,7 +613,6 @@ public class CommandListener extends ListenerAdapter{
                         // Example SQL Date : 2013-01-01 00:00:00
                         String sqlFormattedDate = "20" + command[3].substring(6) + "-" + command[3].substring(0, 2)
                                 + "-" + command[3].substring(3, 5) + "%2000:00:00";
-                        //System.out.println(sqlFormattedDate);
 
                         // make connection to get beatmaps
                         StringBuffer response = null;
@@ -692,11 +681,10 @@ public class CommandListener extends ListenerAdapter{
             eb.setColor(Color.ORANGE);
             eb.setAuthor(event.getGuild().getName(), null, event.getGuild().getIconUrl());
             eb.setDescription(output);
-            SimpleDateFormat dateFormatter = new SimpleDateFormat("E MMM d'th,' yyyy 'at' h:m a z");
             eb.setFooter("Created on " + event.getGuild().getTimeCreated().getMonthValue() + "/"
                     + event.getGuild().getTimeCreated().getDayOfMonth() + "/"
                     + event.getGuild().getTimeCreated().getYear()
-                    + " | " + dateFormatter.format(now), null);
+                    + " | " + current.toString(), null);
             event.getChannel().sendMessage(eb.build()).queue();
         }
 
@@ -784,7 +772,6 @@ public class CommandListener extends ListenerAdapter{
                         eb.setColor(Color.ORANGE);
                         event.getChannel().sendMessage(eb.build()).queue();
                     }else {
-                        //System.out.println(game.getName() + " " + game.getType() + " " + game.getUrl());
                         if(activities.get(0).getType().toString().equals("LISTENING")) {
                             eb.setAuthor(member.getUser().getName() + " is listening to " + activities.get(0).getName(), null, member.getUser().getAvatarUrl());
                         }else {
@@ -838,7 +825,7 @@ public class CommandListener extends ListenerAdapter{
                         event.getChannel().sendMessage(eb.build()).queue();
                     }
                     catch(Exception e) {
-                        //e.printStackTrace();
+                        logger.info("Twitch API lookup failed");
                     }
                 }
             }
@@ -861,7 +848,7 @@ public class CommandListener extends ListenerAdapter{
                     event.getChannel().sendMessage(eb.build()).queue();
                 }
                 catch(Exception e) {
-                    //e.printStackTrace();
+                    logger.info("Twitch API lookup failed");
                 }
             }
         }
@@ -869,15 +856,16 @@ public class CommandListener extends ListenerAdapter{
         // pic/gif commands
         else if(command[0].equalsIgnoreCase("!waifu")) {
             try {
+                logger.info("waifu command called by " + event.getAuthor().getName());
                 boolean isNSFW = true;
                 JSONObject image = null;
                 String fileURL = "";
-                for(int apiLookUp = 0; apiLookUp < 5; apiLookUp++){
+                for(int apiLookUp = 0; apiLookUp < 10; apiLookUp++){
                     if(!isNSFW) {
                         // break for-loop
                         break;
                     }
-                    String link = "https://danbooru.donmai.us/posts.json?limit=10&random=true&tags=1girl";
+                    String link = "https://danbooru.donmai.us/posts.json?limit=50&random=true&tags=solo%20rating%3As";
                     URL url = new URL(link);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("GET");
@@ -892,12 +880,18 @@ public class CommandListener extends ListenerAdapter{
                         image = imageDataArray.getJSONObject(i);
                         try {
                             fileURL = image.getString("file_url");
+                            if(!fileURL.endsWith(".jpg") && !fileURL.endsWith(".png") && !fileURL.endsWith(".gif")) {
+                                throw new JSONException("Video link");
+                            }
                         }
                         catch(JSONException e){
                             continue;
                         }
-                        if(image.getString("rating").equals("s") && !fileURL.isEmpty()) {
-                            //System.out.println(image.toString());
+                        if(image.getString("rating").equals("s")
+                                && !JSONHelper.isNSFW(image.getString("tag_string"))
+                                && image.getInt("score") > 20
+                                && !fileURL.isEmpty()) {
+                            logger.info(event.getAuthor().getName() + ": https://danbooru.donmai.us/posts/" + image.getInt("id"));
                             isNSFW = false;
                             break;
                         }
@@ -905,26 +899,29 @@ public class CommandListener extends ListenerAdapter{
                 }
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(Color.ORANGE);
+                eb.setAuthor(event.getAuthor().getName() + "'s Waifu", null, event.getAuthor().getAvatarUrl());
                 eb.setImage(fileURL);
+                eb.setFooter("Waifu");
                 event.getChannel().sendMessage(eb.build()).queue();
             }
             catch(Exception e) {
-                e.printStackTrace();
+                logger.debug(e.getMessage());
             }
         }
 
         else if(command[0].equalsIgnoreCase("!waifudump")) {
             try {
+                logger.info("waifudump command called by " + event.getAuthor().getName());
                 boolean isNSFW = true;
                 JSONObject image = null;
                 int imageCount = 0;
-                String[] imageURLArray = new String[3];
-                for(int apiLookUp = 0; apiLookUp < 5; apiLookUp++){
+                ArrayList<String> imageURLArray = new ArrayList<>();
+                for(int apiLookUp = 0; apiLookUp < 10; apiLookUp++){
                     if(!isNSFW) {
                         // break for-loop
                         break;
                     }
-                    String link = "https://danbooru.donmai.us/posts.json?limit=15&random=true&tags=1girl";
+                    String link = "https://danbooru.donmai.us/posts.json?limit=100&random=true&tags=solo%20rating%3As%20-panties";
                     URL url = new URL(link);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("GET");
@@ -937,39 +934,204 @@ public class CommandListener extends ListenerAdapter{
                     JSONArray imageDataArray = new JSONArray(stringBuffer.toString());
                     for(int i = 0; i < imageDataArray.length(); i++) {
                         if(imageCount == 3) {
-                            //System.out.println("Acquired 3 pictures");
+                            isNSFW = false;
                             break;
                         }
                         image = imageDataArray.getJSONObject(i);
-                        String fileURL = null;
+                        String fileURL = "";
                         try {
                             fileURL = image.getString("file_url");
+                            if(!fileURL.endsWith(".jpg") && !fileURL.endsWith(".png") && !fileURL.endsWith(".gif")) {
+                                throw new JSONException("Video link");
+                            }
                         }
                         catch(JSONException e){
                             continue;
                         }
-                        if(image.getString("rating").equals("s") && fileURL != null) {
-                            //System.out.println(image.toString());
-                            imageURLArray[imageCount] = image.getString("file_url");
-                            isNSFW = false;
+                        if(image.getString("rating").equals("s")
+                                && !JSONHelper.isNSFW(image.getString("tag_string"))
+                                && image.getInt("score") > 20
+                                && !fileURL.isEmpty()) {
+                            logger.info(event.getAuthor().getName() + ": https://danbooru.donmai.us/posts/" + image.getInt("id"));
+                            imageURLArray.add(fileURL);
                             imageCount += 1;
                         }
                     }
                 }
-                EmbedBuilder eb = new EmbedBuilder();
-                eb.setColor(Color.ORANGE);
-                eb.setImage(imageURLArray[0]);
-                event.getChannel().sendMessage(eb.build()).queue();
-                eb.setImage(imageURLArray[1]);
-                event.getChannel().sendMessage(eb.build()).queue();
-                eb.setImage(imageURLArray[2]);
-                event.getChannel().sendMessage(eb.build()).queue();
+                // print every picture message
+                int count = 1;
+                for(String imageLink : imageURLArray) {
+                    EmbedBuilder eb = new EmbedBuilder();
+                    eb.setAuthor(event.getAuthor().getName() + "'s Waifu", null, event.getAuthor().getAvatarUrl());
+                    eb.setColor(Color.ORANGE);
+                    eb.setImage(imageLink);
+                    eb.setFooter("Waifu Dump (" + count + "/" + imageURLArray.size() + ")");
+                    event.getChannel().sendMessage(eb.build()).queue();
+                    count += 1;
+                }
             }
             catch(Exception e) {
-                e.printStackTrace();
+                logger.debug(e.getMessage());
             }
         }
 
+        /*
+        else if(command[0].equalsIgnoreCase("!sdvx")) {
+            try {
+                URL url = new URL("https://sdvx.in/sort/sort_19.htm");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Accept", "application/html");
+                InputStream inputStream = conn.getInputStream();
+                StringBuffer stringBuffer = JSONHelper.toStringBuffer(inputStream);
+                System.out.println(stringBuffer.toString());
+                String jsCode = stringBuffer.toString();
+
+                String[] chartData = jsCode.split("<script>");
+                for(String chart : chartData) {
+                    System.out.println(chart);
+                }
+                conn.disconnect();
+            }catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+        */
+
+        // add custom command
+        else if(command[0].equalsIgnoreCase("!add")) {
+            boolean notEligible = true;
+            // check if Role is eligible for command
+            for(Role role : event.getMember().getRoles()) {
+                if(role.getName().equalsIgnoreCase("Nitro Booster") || role.getName().equalsIgnoreCase("Nugget Gang") || role.getName().equalsIgnoreCase("Mods")) {
+                    notEligible = false;
+                }
+            }
+            if(notEligible) {
+                logger.info("User cannot write new custom command");
+                return;
+            }
+            if(command.length < 2) {
+                event.getChannel().sendMessage("Add custom command. Use format: **!add <command name> <task>** (i.e. **!add test Kappa123**)").queue();
+                return;
+            }
+
+            // command and attachment
+            else if(command.length == 2 && command[1].matches("^[a-zA-Z]+$") && event.getMessage().getAttachments().size() > 0) {
+                try {
+                    Message.Attachment attachment = event.getMessage().getAttachments().get(0);
+                    Command newCommand = new Command("!" + command[1], attachment.retrieveInputStream().get(), attachment.getFileName(), event.getAuthor().getIdLong());
+                    boolean isAdded = AppConfig.commandSet.add(newCommand);
+                    if(isAdded) {
+                        FileOutputStream fileOutputStream = new FileOutputStream(AppConfig.PROPERTIES.getProperty("SERIALFILE"));
+                        ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                        objectOutputStream.writeObject(AppConfig.commandSet);
+                        objectOutputStream.close();
+                        fileOutputStream.close();
+                        EmbedBuilder eb = new EmbedBuilder();
+                        eb.setColor(Color.GREEN);
+                        eb.setDescription("**!" + command[1] + "** command has been added.");
+                        eb.setFooter(current.toString());
+                        event.getChannel().sendMessage(eb.build()).queue();
+                        logger.info("Command add successful");
+                    }
+                    else {
+                        logger.info("Command add failure");
+                    }
+                } catch (IOException | InterruptedException | ExecutionException e) {
+                    logger.info("Command add failure");
+                }
+            }
+            // for commands (!add test Kappa123)
+            else if(command[1].matches("^[a-zA-Z]+$") && !command[2].startsWith("!") && event.getMessage().getAttachments().size() == 0) {
+                String task = command[2];
+                for(int i = 3; i < command.length; i++) {
+                    task += " " + command[i];
+                }
+                for(String currentCommand : defaultCommands) {
+                    // check if new command matches default commands
+                    if(currentCommand.equalsIgnoreCase("!" + command[1])) {
+                        logger.info("Command exists as default");
+                        return;
+                    }
+                }
+                try {
+                    Command newCommand = new Command("!" + command[1], task, event.getAuthor().getIdLong());
+                    boolean isAdded = AppConfig.commandSet.add(newCommand);
+                    if(isAdded) {
+                        FileOutputStream fileOutputStream = new FileOutputStream(AppConfig.PROPERTIES.getProperty("SERIALFILE"));
+                        ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                        objectOutputStream.writeObject(AppConfig.commandSet);
+                        objectOutputStream.close();
+                        fileOutputStream.close();
+                        EmbedBuilder eb = new EmbedBuilder();
+                        eb.setColor(Color.GREEN);
+                        eb.setDescription("**!" + command[1] + "** command has been added.");
+                        eb.setFooter(current.toString());
+                        event.getChannel().sendMessage(eb.build()).queue();
+                        logger.info("Command add successful");
+                    }
+                    else {
+                        logger.info("Command add failure");
+                    }
+                } catch (IOException e) {
+                    logger.info("Command add failure");
+                }
+            }
+        }
+
+        // delete custom command (only owner)
+        else if(command[0].equalsIgnoreCase("!delete")) {
+            if(command.length == 2) {
+                boolean status = false;
+                for(Command currentCommand : AppConfig.commandSet) {
+                    if(currentCommand.getCommandName().equals("!" + command[1])) {
+                        // if user matches owner, remove command
+                        if(currentCommand.getCommandOwner() == event.getAuthor().getIdLong()) {
+                            AppConfig.commandSet.remove(currentCommand);
+                            status = true;
+                            break;
+                        }
+                    }
+                }
+                if(status) {
+                    try {
+                        FileOutputStream fileOutputStream = new FileOutputStream(AppConfig.PROPERTIES.getProperty("SERIALFILE"));
+                        ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                        objectOutputStream.writeObject(AppConfig.commandSet);
+                        objectOutputStream.close();
+                        fileOutputStream.close();
+                        EmbedBuilder eb = new EmbedBuilder();
+                        eb.setColor(Color.RED);
+                        eb.setDescription("**!" + command[1] + "** command has been deleted.");
+                        eb.setFooter(current.toString());
+                        event.getChannel().sendMessage(eb.build()).queue();
+                        logger.info("Command delete successful");
+
+                    } catch (IOException e) {
+                        logger.info("Command delete failure");
+                    }
+                }
+                else {
+                    logger.info("Command to delete does not exist");
+                }
+            }
+        }
+
+        else {
+            // custom commands
+            AppConfig.commandSet.forEach((currentCommand) -> {
+                if(command[0].equalsIgnoreCase(currentCommand.getCommandName())) {
+                    if(!currentCommand.getTask().isEmpty()) {
+                        event.getChannel().sendMessage(currentCommand.getTask()).queue();
+                    }
+                    else {
+                        event.getChannel().sendFile(currentCommand.getCommandContent(), currentCommand.getFileName()).queue();
+                    }
+
+                }
+            });
+        }
 
     }// end of commands
 

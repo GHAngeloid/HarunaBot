@@ -2,6 +2,7 @@ package listener;
 
 import java.awt.Color;
 
+import configuration.AppConfig;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.channel.text.update.TextChannelUpdatePermissionsEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent;
@@ -18,12 +19,17 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberLeaveEvent;
 import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
+import net.dv8tion.jda.api.events.user.update.UserUpdateOnlineStatusEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 
 
 public class GuildMemberListener extends ListenerAdapter {
+
+    static Logger logger = LoggerFactory.getLogger(CommandListener.class);
 
     public void onGuildMemberJoin(@Nonnull GuildMemberJoinEvent event){
 
@@ -45,7 +51,23 @@ public class GuildMemberListener extends ListenerAdapter {
 
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.ORANGE);
-        eb.setDescription(event.getUser().getName() + " changed their nickname from **" + event.getOldNickname() + "** to **" + event.getNewNickname() + "**");
+        String description = "";
+        // User reverted back to default nickname (none)
+        if(event.getNewNickname() == null) {
+            return;
+        }
+
+        // User changed to nickname for "first time"
+        if(event.getOldNickname() == null) {
+            description = event.getUser().getName() + " changed their nickname to **" + event.getNewNickname() + "**";
+        }
+        // User changed to different nickname
+        else {
+            description = event.getUser().getName() + " changed their nickname from **"
+                    + event.getOldNickname() + "** to **" + event.getNewNickname() + "**";
+        }
+
+        eb.setDescription(description);
         event.getGuild().getTextChannelsByName("botcommands",true).get(0).sendMessage(eb.build()).queue();
 
     }
@@ -53,6 +75,14 @@ public class GuildMemberListener extends ListenerAdapter {
     // Still needs big fixes!
     public void onUserUpdateActivityOrder(@Nonnull UserUpdateActivityOrderEvent event){
 
+    }
+
+    public void onUserUpdateOnlineStatus(@Nonnull UserUpdateOnlineStatusEvent event) {
+        if(event.getNewOnlineStatus().getKey().equals("offline")) {
+            Member member = event.getMember();
+            Role role = event.getGuild().getRolesByName("LIVE", true).get(0);
+            event.getGuild().removeRoleFromMember(member, role).queue();
+        }
     }
 
 
@@ -70,19 +100,21 @@ public class GuildMemberListener extends ListenerAdapter {
             event.getGuild().addRoleToMember(member, role).queue();
             //System.out.println(member.getEffectiveName() + " is LIVE");
         }
+        else {
+            Member member = event.getMember();
+            Role role = event.getGuild().getRolesByName("LIVE", true).get(0);
+            event.getGuild().removeRoleFromMember(member, role).queue();
+        }
 
     }
 
 
     public void onUserActivityEnd(@Nonnull UserActivityEndEvent event) {
-
         if(event.getOldActivity().getType().getKey() == 1) {
             Member member = event.getMember();
             Role role = event.getGuild().getRolesByName("LIVE", true).get(0);
             event.getGuild().removeRoleFromMember(member, role).queue();
-            //System.out.println(member.getEffectiveName() + " is not LIVE");
         }
-
     }
 
 
@@ -125,7 +157,7 @@ public class GuildMemberListener extends ListenerAdapter {
         System.out.println("DELETE " + event.getChannel().getName() + "\n"
                 + event.getMessageId());
          */
-
+        // Have a database or data structure to hold message contents by message id
     }
 
     public void onGuildMessageEmbed(@Nonnull GuildMessageEmbedEvent event) {
@@ -137,10 +169,8 @@ public class GuildMemberListener extends ListenerAdapter {
     }
 
     public void onGuildMessageReactionAdd(@Nonnull GuildMessageReactionAddEvent event) {
-        System.out.println("ROLE ADD : " + event.getMember().getNickname());
-        //System.out.println(event.getReactionEmote().getEmote().getName());
-        //System.out.println(event.getReactionEmote().getAsCodepoints());
-        if(event.getMessageIdLong() == 623343073916878918L) {
+        logger.info("ROLE ADD : " + event.getMember().getNickname());
+        if(event.getMessageIdLong() == Long.getLong(AppConfig.PROPERTIES.getProperty("REACTMSG"))) {
             if(event.getReactionEmote().getName().equals("💜")) {
                 event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("Streamer", true).get(0)).queue();
             }
@@ -154,9 +184,8 @@ public class GuildMemberListener extends ListenerAdapter {
     }
 
     public void onGuildMessageReactionRemove(@Nonnull GuildMessageReactionRemoveEvent event) {
-        System.out.println("ROLE REMOVE : " + event.getMember().getNickname());
-        //System.out.println(event.getReactionEmote().getName());
-        if(event.getMessageIdLong() == 623343073916878918L) {
+        logger.info("ROLE REMOVE : " + event.getMember().getNickname());
+        if(event.getMessageIdLong() == Long.getLong(AppConfig.PROPERTIES.getProperty("REACTMSG"))) {
             if(event.getReactionEmote().getName().equals("💜")) {
                 event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("Streamer", true).get(0)).queue();
             }
@@ -170,7 +199,7 @@ public class GuildMemberListener extends ListenerAdapter {
     }
 
     public void onGuildMessageReactionRemoveAll(@Nonnull GuildMessageReactionRemoveAllEvent event) {
-        //System.out.println("ROLE REMOVEALL");
+
     }
 
 }

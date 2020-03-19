@@ -2,8 +2,6 @@
 .idea/
 target/
 resources/
-Reference.*
-HarunaBotNotes.txt
 id_rsa*
 
 # File extensions
@@ -12,3 +10,5 @@ id_rsa*
 *.log
 *.pem
 *.pub
+*.ser
+*.txt
