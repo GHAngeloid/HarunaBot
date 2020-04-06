@@ -93,6 +93,11 @@ public class Command implements Serializable, Comparable<Command> {
         return x;
     }
 
+    @Override
+    public String toString() {
+        return this.commandName + " " + this.task + " " + this.fileName;
+    }
+
 
 }
 

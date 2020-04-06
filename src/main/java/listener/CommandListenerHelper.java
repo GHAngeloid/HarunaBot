@@ -11,32 +11,6 @@ public class CommandListenerHelper {
 
 
     /**
-     * Prints all available emotes in the server.
-     * @param e GuildMessageReceivedEvent
-     * @return String
-     */
-    static String emotePrint(GuildMessageReceivedEvent e){
-
-        int emoteTotal = e.getGuild().getEmotes().size();
-        String[] idList = new String[emoteTotal];
-        String message = "";
-        for(int i = 0; i < emoteTotal; i++){
-            idList[i] = e.getGuild().getEmotes().get(i).getId();
-            //e.getGuild().getEmotes().get(i);
-        }// list of emoteIDs
-
-        for(int j = 0; j < emoteTotal; j++){
-            if(j == emoteTotal - 1){
-                message += "\t" + e.getGuild().getEmoteById(idList[j]).getAsMention() + "\n";
-            }
-            message += "\t" + e.getGuild().getEmoteById(idList[j]).getAsMention() + "\n";
-        }//constructs entire message with emote names
-
-        return message;
-    }
-
-
-    /**
      * Roll a number between 1 and n. n is max, the outer-bound. (ex: 1 and 100).
      * @param max int
      * @return int

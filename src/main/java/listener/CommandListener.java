@@ -26,8 +26,10 @@ import java.util.concurrent.ExecutionException;
 
 public class CommandListener extends ListenerAdapter{
 
+    // logger object
     static Logger logger = LoggerFactory.getLogger(CommandListener.class);
 
+    // default commands
     static String[] defaultCommands = {"!ping", "!roll", "!role", "!server", "!love", "!osu", "!activity",
         "!choose", "!twitch", "!waifu", "!waifudump", "!add", "!help"};
 
@@ -1087,9 +1089,9 @@ public class CommandListener extends ListenerAdapter{
                 for(Command currentCommand : AppConfig.commandSet) {
                     if(currentCommand.getCommandName().equals("!" + command[1])) {
                         // if user matches owner, remove command
-                        if(currentCommand.getCommandOwner() == event.getAuthor().getIdLong()) {
-                            AppConfig.commandSet.remove(currentCommand);
-                            status = true;
+                        if(currentCommand.getCommandOwner() == event.getAuthor().getIdLong() || event.getMember().isOwner()) {
+                            // remove command from commandSet
+                            status = AppConfig.commandSet.remove(currentCommand);
                             break;
                         }
                     }
@@ -1114,6 +1116,132 @@ public class CommandListener extends ListenerAdapter{
                 }
                 else {
                     logger.info("Command to delete does not exist");
+                }
+            }
+        }
+
+        // edit command name or contents
+        else if(command[0].equalsIgnoreCase("!edit")) {
+            if(command.length >= 3) {
+                if(command[1].equalsIgnoreCase("-name")) {
+                    if(command.length == 4 && command[3].matches("^[a-zA-Z]+$")) {
+                        // i.e. !edit -name test testOne
+                        Command temp = null;
+                        for (Command currentCommand : AppConfig.commandSet) {
+                            if(currentCommand.getCommandName().equalsIgnoreCase("!" + command[2])) {
+                                if(currentCommand.getCommandOwner() == event.getAuthor().getIdLong() || event.getMember().isOwner()) {
+                                    temp = currentCommand;
+                                    AppConfig.commandSet.remove(currentCommand);
+                                    break;
+                                }
+                            }
+                        }
+                        if(temp != null) {
+                            try {
+                                temp.setCommandName("!" + command[3]);
+                                boolean isAdded = AppConfig.commandSet.add(temp);
+                                if (isAdded) {
+                                    FileOutputStream fileOutputStream = new FileOutputStream(AppConfig.PROPERTIES.getProperty("SERIALFILE"));
+                                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                                    objectOutputStream.writeObject(AppConfig.commandSet);
+                                    objectOutputStream.close();
+                                    fileOutputStream.close();
+                                    EmbedBuilder eb = new EmbedBuilder();
+                                    eb.setColor(Color.YELLOW);
+                                    eb.setDescription("**!" + command[2] + "** command has changed to **!" + command[3] + "**.");
+                                    eb.setFooter(current.toString());
+                                    event.getChannel().sendMessage(eb.build()).queue();
+                                    logger.info("Command name edit successful");
+                                } else {
+                                    logger.info("Command name edit failure");
+                                }
+                            }
+                            catch(IOException e) {
+                                logger.info("Command name edit failure");
+                            }
+                        }
+                    }
+                }
+                else if(command[1].equalsIgnoreCase("-content")) {
+                    if(command.length == 3 && event.getMessage().getAttachments().size() > 0) {
+                        boolean isRemoved = false;
+                        Message.Attachment attachment = event.getMessage().getAttachments().get(0);
+                        for (Command currentCommand : AppConfig.commandSet) {
+                            if(currentCommand.getCommandName().equalsIgnoreCase("!" + command[2])) {
+                                if(currentCommand.getCommandOwner() == event.getAuthor().getIdLong() || event.getMember().isOwner()) {
+                                    isRemoved = AppConfig.commandSet.remove(currentCommand);
+                                    break;
+                                }
+
+                            }
+                        }
+                        // remove command in set
+                        if(isRemoved) {
+                            try {
+                                Command newCommand = new Command("!" + command[2], attachment.retrieveInputStream().get(), attachment.getFileName(), event.getAuthor().getIdLong());
+                                boolean isAdded = AppConfig.commandSet.add(newCommand);
+                                if(isAdded) {
+                                    FileOutputStream fileOutputStream = new FileOutputStream(AppConfig.PROPERTIES.getProperty("SERIALFILE"));
+                                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                                    objectOutputStream.writeObject(AppConfig.commandSet);
+                                    objectOutputStream.close();
+                                    fileOutputStream.close();
+                                    EmbedBuilder eb = new EmbedBuilder();
+                                    eb.setColor(Color.YELLOW);
+                                    eb.setDescription("**!" + command[2] + "** command has been edited.");
+                                    eb.setFooter(current.toString());
+                                    event.getChannel().sendMessage(eb.build()).queue();
+                                    logger.info("Command edit successful");
+                                }
+                                else {
+                                    logger.info("Command edit failure");
+                                }
+                            }
+                            catch(IOException | InterruptedException | ExecutionException e) {
+                                logger.info("Command edit failure");
+                            }
+                        }
+                    }
+                    else if(command.length > 3 && event.getMessage().getAttachments().size() == 0) {
+                        String task = command[3];
+                        for(int i = 4; i < command.length; i++) {
+                            task += " " + command[i];
+                        }
+                        boolean isRemoved =false;
+                        for(Command currentCommand : AppConfig.commandSet) {
+                            if(currentCommand.getCommandName().equalsIgnoreCase("!" + command[2])) {
+                                if(currentCommand.getCommandOwner() == event.getAuthor().getIdLong() || event.getMember().isOwner()) {
+                                    isRemoved = AppConfig.commandSet.remove(currentCommand);
+                                    break;
+                                }
+                            }
+                        }
+                        // remove command in set
+                        if(isRemoved) {
+                            try {
+                                Command newCommand = new Command("!" + command[2], task, event.getAuthor().getIdLong());
+                                boolean isAdded = AppConfig.commandSet.add(newCommand);
+                                if(isAdded) {
+                                    FileOutputStream fileOutputStream = new FileOutputStream(AppConfig.PROPERTIES.getProperty("SERIALFILE"));
+                                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                                    objectOutputStream.writeObject(AppConfig.commandSet);
+                                    objectOutputStream.close();
+                                    fileOutputStream.close();
+                                    EmbedBuilder eb = new EmbedBuilder();
+                                    eb.setColor(Color.YELLOW);
+                                    eb.setDescription("**!" + command[2] + "** command has been edited.");
+                                    eb.setFooter(current.toString());
+                                    event.getChannel().sendMessage(eb.build()).queue();
+                                    logger.info("Command edit successful");
+                                }
+                                else {
+                                    logger.info("Command edit failure");
+                                }
+                            } catch (IOException e) {
+                                logger.info("Command edit failure");
+                            }
+                        }
+                    }
                 }
             }
         }

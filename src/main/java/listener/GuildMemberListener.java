@@ -169,8 +169,8 @@ public class GuildMemberListener extends ListenerAdapter {
     }
 
     public void onGuildMessageReactionAdd(@Nonnull GuildMessageReactionAddEvent event) {
-        logger.info("ROLE ADD : " + event.getMember().getNickname());
-        if(event.getMessageIdLong() == Long.getLong(AppConfig.PROPERTIES.getProperty("REACTMSG"))) {
+        logger.info("ROLE ADD : " + event.getUser().getName());
+        if(event.getMessageId().equals(AppConfig.PROPERTIES.getProperty("REACTMSG"))) {
             if(event.getReactionEmote().getName().equals("💜")) {
                 event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("Streamer", true).get(0)).queue();
             }
@@ -184,8 +184,8 @@ public class GuildMemberListener extends ListenerAdapter {
     }
 
     public void onGuildMessageReactionRemove(@Nonnull GuildMessageReactionRemoveEvent event) {
-        logger.info("ROLE REMOVE : " + event.getMember().getNickname());
-        if(event.getMessageIdLong() == Long.getLong(AppConfig.PROPERTIES.getProperty("REACTMSG"))) {
+        logger.info("ROLE REMOVE : " + event.getUser().getName());
+        if(event.getMessageId().equals(AppConfig.PROPERTIES.getProperty("REACTMSG"))) {
             if(event.getReactionEmote().getName().equals("💜")) {
                 event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("Streamer", true).get(0)).queue();
             }
