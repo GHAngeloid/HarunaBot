@@ -197,7 +197,10 @@ public class GuildMemberListener extends ListenerAdapter {
             }
         }
         else if(event.getMessageId().equals(AppConfig.PROPERTIES.getProperty("EXTRAROLES"))) {
-            if(event.getReactionEmote().getName().equals("TPAlcohol")) {
+            if(event.getReactionEmote().getName().equals("PeepoPing")) {
+                event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("Events", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("TPAlcohol")) {
                 event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("RAVER", true).get(0)).queue();
             }
             else if(event.getReactionEmote().getName().equals("smileW")) {
@@ -244,7 +247,10 @@ public class GuildMemberListener extends ListenerAdapter {
             }
         }
         else if(event.getMessageId().equals(AppConfig.PROPERTIES.getProperty("EXTRAROLES"))) {
-            if(event.getReactionEmote().getName().equals("TPAlcohol")) {
+            if(event.getReactionEmote().getName().equals("PeepoPing")) {
+                event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("Events", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("TPAlcohol")) {
                 event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("RAVER", true).get(0)).queue();
             }
             else if(event.getReactionEmote().getName().equals("smileW")) {
