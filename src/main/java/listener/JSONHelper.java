@@ -23,6 +23,9 @@ public class JSONHelper {
                 return true;
             }
         }
+        if(!tags.contains("eyes")){
+            return true;
+        }
         return false;
     }
 

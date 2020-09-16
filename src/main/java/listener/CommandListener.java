@@ -333,27 +333,11 @@ public class CommandListener extends ListenerAdapter{
             // Replaces !rolelist command
             if(command[1].equalsIgnoreCase("-list")) {
                 String output = "**List of available roles:**\n";
-                // Display roles that are allowed. Make it Permission sensitive!
-                Role role;
-                boolean isAllowed = true;
-                for(int i = 0; i < event.getGuild().getRoles().size(); i++){
-                    role = event.getGuild().getRoles().get(i);
-                    if(role.getName().equals("@everyone") || role.getName().equals("LIVE")) {
-                        continue;
-                    }
 
-                    if(role.getPermissions().contains(Permission.ADMINISTRATOR)
-                            || role.getPermissions().contains(Permission.KICK_MEMBERS)
-                            || role.getPermissions().contains(Permission.BAN_MEMBERS)
-                            || role.isManaged()) {
-                        isAllowed = false;
-                    }
-                    if(isAllowed) {
-                        output += role.getName() + "\n";
-                    }else{
-                        isAllowed = true;
-                    }
+                for(String roleName : AppConfig.availableRoles) {
+                    output += roleName + "\n";
                 }
+
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(Color.ORANGE);
                 eb.setDescription(output);

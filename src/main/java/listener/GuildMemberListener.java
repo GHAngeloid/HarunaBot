@@ -170,30 +170,94 @@ public class GuildMemberListener extends ListenerAdapter {
 
     public void onGuildMessageReactionAdd(@Nonnull GuildMessageReactionAddEvent event) {
         logger.info("ROLE ADD : " + event.getUser().getName());
-        if(event.getMessageId().equals(AppConfig.PROPERTIES.getProperty("REACTMSG"))) {
+        if(event.getMessageId().equals(AppConfig.PROPERTIES.getProperty("GENERALROLES"))) {
             if(event.getReactionEmote().getName().equals("💜")) {
                 event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("Streamer", true).get(0)).queue();
             }
-            if(event.getReactionEmote().getName().equals("❤")) {
+            else if(event.getReactionEmote().getName().equals("❤")) {
                 event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("YouTuber", true).get(0)).queue();
             }
-            if(event.getReactionEmote().getName().equals("💚")) {
+            else if(event.getReactionEmote().getName().equals("💚")) {
                 event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("New Jersey", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("life")) {
+                event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("Artist", true).get(0)).queue();
+            }
+        }
+        // TODO: ADD NEW ROLES
+        else if(event.getMessageId().equals(AppConfig.PROPERTIES.getProperty("GAMEROLES"))) {
+            if(event.getReactionEmote().getName().equals("osuthink")) {
+                event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("osu gang", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("kureDerp")) {
+                event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("BEMANI SOUND TEAM", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("bills")) {
+                event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("GACHA", true).get(0)).queue();
+            }
+        }
+        else if(event.getMessageId().equals(AppConfig.PROPERTIES.getProperty("EXTRAROLES"))) {
+            if(event.getReactionEmote().getName().equals("TPAlcohol")) {
+                event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("RAVER", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("smileW")) {
+                event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("Dev", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("smug")) {
+                event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("FREE STUFF", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("HifumiNani")) {
+                event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("weeb trash", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("GHblank")) {
+                event.getGuild().addRoleToMember(event.getMember(), event.getGuild().getRolesByName("real talk", true).get(0)).queue();
             }
         }
     }
 
     public void onGuildMessageReactionRemove(@Nonnull GuildMessageReactionRemoveEvent event) {
         logger.info("ROLE REMOVE : " + event.getUser().getName());
-        if(event.getMessageId().equals(AppConfig.PROPERTIES.getProperty("REACTMSG"))) {
+        if(event.getMessageId().equals(AppConfig.PROPERTIES.getProperty("GENERALROLES"))) {
             if(event.getReactionEmote().getName().equals("💜")) {
                 event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("Streamer", true).get(0)).queue();
             }
-            if(event.getReactionEmote().getName().equals("❤")) {
+            else if(event.getReactionEmote().getName().equals("❤")) {
                 event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("YouTuber", true).get(0)).queue();
             }
-            if(event.getReactionEmote().getName().equals("💚")) {
+            else if(event.getReactionEmote().getName().equals("💚")) {
                 event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("New Jersey", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("life")) {
+                event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("Artist", true).get(0)).queue();
+            }
+        }
+        // TODO: ADD MORE ROLES
+        else if(event.getMessageId().equals(AppConfig.PROPERTIES.getProperty("GAMEROLES"))) {
+            if(event.getReactionEmote().getName().equals("osuthink")) {
+                event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("osu gang", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("kureDerp")) {
+                event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("BEMANI SOUND TEAM", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("bills")) {
+                event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("GACHA", true).get(0)).queue();
+            }
+        }
+        else if(event.getMessageId().equals(AppConfig.PROPERTIES.getProperty("EXTRAROLES"))) {
+            if(event.getReactionEmote().getName().equals("TPAlcohol")) {
+                event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("RAVER", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("smileW")) {
+                event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("Dev", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("smug")) {
+                event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("FREE STUFF", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("HifumiNani")) {
+                event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("weeb trash", true).get(0)).queue();
+            }
+            else if(event.getReactionEmote().getName().equals("GHblank")) {
+                event.getGuild().removeRoleFromMember(event.getMember(), event.getGuild().getRolesByName("real talk", true).get(0)).queue();
             }
         }
     }

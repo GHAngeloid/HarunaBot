@@ -20,6 +20,8 @@ public class AppConfig {
 
     public static ArrayList<String> tagList = new ArrayList<>();
 
+    public static ArrayList<String> availableRoles = new ArrayList<>();
+
     public static void initializeProperties() throws IOException{
         AppConfig.PROPERTIES.load(AppConfig.class.getClassLoader().getResourceAsStream("application.properties"));
 
@@ -39,6 +41,28 @@ public class AppConfig {
         }
         fileInputStream.close();
         logger.info("Tag filter list is loaded");
+
+        // load roles file to list
+        try{
+            fileInputStream = new FileInputStream("roles.txt");
+            data = fileInputStream.read();
+            word = "";
+            while(data != -1) {
+                if((char)data == '\n') {
+                    availableRoles.add(word);
+                    word = "";
+                }
+                else {
+                    word += (char) data;
+                }
+                data = fileInputStream.read();
+            }
+            fileInputStream.close();
+            logger.info("Available Roles list is loaded");
+        }
+        catch(IOException e){
+            logger.info("Roles file does not exist");
+        }
 
         // retrieve serialized file
         try {
